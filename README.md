@@ -115,5 +115,5 @@ For local dev without KV, leads are stored in memory (lost on restart). That's f
 ```
 Browser → /api/chat (auth check + rate limit) → Anthropic API
 Lead → /api/inbound-sms or /api/inbound-email → Claude → Twilio/Postmark reply
-Dashboard → /api/leads → Vercel KV
+Dashboard → /api/leads → Vercel KV 
 ```
