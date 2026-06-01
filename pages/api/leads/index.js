@@ -5,8 +5,8 @@
  */
 
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../lib/auth';
-import { getAllLeads, saveLead, getStats } from '../../lib/db';
+import { authOptions } from '../../../lib/auth';
+import { getAllLeads, saveLead, getStats } from '../../../lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
