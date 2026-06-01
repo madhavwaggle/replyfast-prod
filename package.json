@@ -1,0 +1,31 @@
+{
+  "name": "replyfast",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@auth/core": "^0.18.0",
+    "@vercel/kv": "^1.0.0",
+    "next": "^14.2.0",
+    "next-auth": "^4.24.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "twilio": "^5.0.0",
+    "nodemailer": "^6.9.0",
+    "postmark": "^4.0.2",
+    "uuid": "^9.0.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.0"
+  }
+}
