@@ -65,7 +65,7 @@ export default function App() {
 
   // Redirect to login only for protected views
   useEffect(() => {
-    if (status === 'unauthenticated' && ['dashboard','setup'].includes(view)) {
+    if (status === 'unauthenticated' && ['dashboard','setup','profile','integrations'].includes(view)) {
       router.push('/login');
     }
   }, [status, view, router]);
@@ -73,6 +73,29 @@ export default function App() {
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [chatMessages, isTyping]);
+
+  // Sync URL with view state
+  useEffect(() => {
+    const viewToPath = {
+      landing:      '/',
+      demo:         '/?view=demo',
+      dashboard:    '/?view=dashboard',
+      profile:      '/?view=profile',
+      integrations: '/?view=integrations',
+      conversation: null, // don't push URL for transient conversation view
+    };
+    const path = viewToPath[view];
+    if (path && typeof window !== 'undefined' && window.location.search !== (path.includes('?') ? '?' + path.split('?')[1] : '')) {
+      router.push(path, undefined, { shallow: true });
+    }
+  }, [view]);
+
+  // Restore view from URL on load
+  useEffect(() => {
+    const qv = router.query?.view;
+    const allowed = ['demo','dashboard','profile','integrations'];
+    if (qv && allowed.includes(qv)) setView(qv);
+  }, [router.query?.view]);
 
   // Close avatar dropdown on outside click
   useEffect(() => {
@@ -88,7 +111,7 @@ export default function App() {
   // Load leads whenever dashboard is shown
   useEffect(() => {
     if (view === 'dashboard') loadLeads();
-    if (view === 'setup') loadProfile();
+    if (['setup','profile'].includes(view)) loadProfile();
   }, [view]);
 
   async function loadProfile() {
@@ -361,9 +384,13 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
                     </div>
                   </div>
                   <div className="avatar-menu">
-                    <button className="avatar-item" onClick={() => { setView('setup'); setAvatarOpen(false); }}>
+                    <button className="avatar-item" onClick={() => { setView('profile'); setAvatarOpen(false); }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      Profile
+                    </button>
+                    <button className="avatar-item" onClick={() => { setView('integrations'); setAvatarOpen(false); }}>
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M12 2a10 10 0 0 1 7.07 2.93M4.93 4.93a10 10 0 0 0 0 14.14M12 22a10 10 0 0 1-7.07-2.93"/></svg>
-                      Setup &amp; integrations
+                      Integrations
                     </button>
                     <div className="avatar-divider" />
                     <button className="avatar-item danger" onClick={() => { setAvatarOpen(false); signOut({ callbackUrl: '/' }); }}>
@@ -539,7 +566,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             <h2>Agent dashboard</h2>
             <div className="dash-nav-right">
               <div className="live-badge"><div className="live-dot" /> Live</div>
-              <button className="btn-outline" onClick={() => setView('setup')} style={{ fontSize: '13px', padding: '.4rem 1rem' }}>Setup integrations</button>
+              <button className="btn-outline" onClick={() => setView('profile')} style={{ fontSize: '13px', padding: '.4rem 1rem' }}>Profile &amp; setup</button>
             </div>
           </div>
 
@@ -649,8 +676,16 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
       )}
 
       {/* SETUP */}
-      {view === 'setup' && (
+      {/* ── PROFILE VIEW ────────────────────────────────────────── */}
+      {view === 'profile' && (
         <section className="fade-in" style={{ maxWidth: '700px', margin: '3rem auto', padding: '0 1.5rem 5rem' }}>
+          <a className="back-link" onClick={() => setView('dashboard')}>← Dashboard</a>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Profile</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Your agent details and SMS routing settings.</p>
+          </div>
+
           {/* PROFILE CARD */}
           <div style={{ marginBottom: '2.5rem' }}>
             <div className="section-label">Your profile</div>
@@ -683,6 +718,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
               </div>
             </div>
           </div>
+
           {/* TWILIO ROUTING CARD */}
           <div style={{ marginBottom: '2.5rem' }}>
             <div className="section-label">SMS routing</div>
@@ -700,9 +736,26 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             </div>
           </div>
 
-          <a className="back-link" onClick={() => setView('landing')}>← Back</a>
-          <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.5rem' }}>Integration Setup Guide</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '2.5rem' }}>Follow these steps to deploy Say Hello Leads with real SMS, email, and lead persistence.</p>
+          {/* LINK TO INTEGRATIONS */}
+          <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '.2rem' }}>Ready to connect SMS, email &amp; lead sources?</div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Follow the step-by-step integration guide to go live.</div>
+            </div>
+            <button className="btn-primary" onClick={() => setView('integrations')} style={{ whiteSpace: 'nowrap' }}>Integration guide →</button>
+          </div>
+        </section>
+      )}
+
+      {/* ── INTEGRATIONS VIEW ────────────────────────────────────── */}
+      {view === 'integrations' && (
+        <section className="fade-in" style={{ maxWidth: '700px', margin: '3rem auto', padding: '0 1.5rem 5rem' }}>
+          <a className="back-link" onClick={() => setView('profile')}>← Profile</a>
+
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Integration Setup Guide</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Follow these steps to deploy Say Hello Leads with real SMS, email, and lead persistence.</p>
+          </div>
 
           {SETUP_STEPS.map((s, i) => (
             <div className="setup-step" key={i}>
