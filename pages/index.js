@@ -414,13 +414,23 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             <button onClick={sendReply} disabled={isTyping || !replyText.trim()}>Send</button>
           </div>
 
-          <button
-            className="go-dashboard-btn"
-            onClick={goToDashboard}
-            disabled={scoring}
-          >
-            {scoring ? 'Scoring lead with AI…' : 'Finish & view in agent dashboard →'}
-          </button>
+          {session ? (
+            <button
+              className="go-dashboard-btn"
+              onClick={goToDashboard}
+              disabled={scoring}
+            >
+              {scoring ? 'Scoring lead with AI…' : 'Finish & view in agent dashboard →'}
+            </button>
+          ) : (
+            <button
+              className="go-dashboard-btn"
+              onClick={() => router.push('/register')}
+              style={{ background: 'var(--sage)' }}
+            >
+              💾 Save this lead — create a free account →
+            </button>
+          )}
         </section>
       )}
 
