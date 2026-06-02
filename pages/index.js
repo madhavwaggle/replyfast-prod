@@ -55,9 +55,12 @@ export default function App() {
     source: 'Zillow', wantsSms: false,
   });
 
+  // Redirect to login only when trying to access protected views
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login');
-  }, [status, router]);
+    if (status === 'unauthenticated' && ['dashboard','demo','conversation','setup'].includes(view)) {
+      router.push('/login');
+    }
+  }, [status, view, router]);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -249,8 +252,6 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
     );
   }
 
-  if (!session) return null;
-
   return (
     <>
       <Head>
@@ -267,13 +268,17 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
         <div className="logo">Reply<span>Fast</span></div>
         <div className="nav-links">
           <a onClick={() => setView('landing')}>Home</a>
-          <a onClick={() => setView('demo')}>Try Demo</a>
-          <a onClick={() => setView('dashboard')}>Dashboard</a>
-          <a onClick={() => setView('setup')}>Setup</a>
-          <div className="nav-user">
-            <span className="nav-email">{session.user?.email}</span>
-            <button className="btn-outline" onClick={() => signOut({ callbackUrl: '/login' })}>Sign out</button>
-          </div>
+          {session && <a onClick={() => setView('demo')}>Try Demo</a>}
+          {session && <a onClick={() => setView('dashboard')}>Dashboard</a>}
+          {session && <a onClick={() => setView('setup')}>Setup</a>}
+          {session ? (
+            <div className="nav-user">
+              <span className="nav-email">{session.user?.name || session.user?.email}</span>
+              <button className="btn-outline" onClick={() => signOut({ callbackUrl: '/' })}>Sign out</button>
+            </div>
+          ) : (
+            <a href="/login" style={{ background: 'var(--sage)', color: '#fff', padding: '.45rem 1.1rem', borderRadius: '8px', fontSize: '14px', fontWeight: '500', textDecoration: 'none' }}>Sign in</a>
+          )}
         </div>
       </nav>
 
@@ -285,8 +290,8 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             <h1>Never lose a lead to<br /><em>slow response</em> again</h1>
             <p>ReplyFast connects to Zillow, Homes.com, Realtor.com and your phone — responds to every lead in under 60 seconds — qualifies them overnight — and delivers hot-lead briefings right to your dashboard.</p>
             <div className="hero-cta">
-              <button className="btn-primary" onClick={() => setView('demo')}>See it in action →</button>
-              <button className="btn-outline" onClick={() => setView('dashboard')}>View agent dashboard</button>
+              <button className="btn-primary" onClick={() => session ? setView('demo') : router.push('/login')}>See it in action →</button>
+              <button className="btn-outline" onClick={() => session ? setView('dashboard') : router.push('/login')}>View agent dashboard</button>
             </div>
           </div>
 
@@ -322,7 +327,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 
           <div className="demo-cta-block">
             <h2>Watch it work on a <em>real lead</em> right now</h2>
-            <button className="btn-primary" onClick={() => setView('demo')}>Try the live demo →</button>
+            <button className="btn-primary" onClick={() => session ? setView('demo') : router.push('/login')}>Try the live demo →</button>
           </div>
         </section>
       )}
