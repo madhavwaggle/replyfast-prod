@@ -59,7 +59,7 @@ async function triggerAIResponse(lead, agent) {
   const agentName = agent?.name || process.env.AGENT_NAME || 'your agent';
   const agencyName = agent?.agencyName || '';
 
-  const systemPrompt = `You are ReplyFast, an AI real estate lead assistant working on behalf of ${agentName}${agencyName ? ` at ${agencyName}` : ''}.
+  const systemPrompt = `You are a Say Hello Leads AI real estate lead assistant working on behalf of ${agentName}${agencyName ? ` at ${agencyName}` : ''}.
 
 Lead details:
 - Name: ${lead.fname} ${lead.lname}
@@ -68,7 +68,7 @@ Lead details:
 - Property: ${lead.property}
 - Source: ${lead.source}
 
-Respond warmly, reference the property they asked about, ask one qualifying question (timeline, budget, or pre-approval status). Keep it under 4 sentences. Sign off as "ReplyFast AI, on behalf of ${agentName}".`;
+Respond warmly, reference the property they asked about, ask one qualifying question (timeline, budget, or pre-approval status). Keep it under 4 sentences. Sign off as "Say Hello Leads AI, on behalf of ${agentName}".`;
 
   try {
     const resp = await anthropic.messages.create({
@@ -134,7 +134,7 @@ async function sendEmailToLead(lead, aiReply, agentName) {
   const postmark = await import('postmark');
   const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
   await client.sendEmail({
-    From: process.env.EMAIL_FROM || `${agentName} via ReplyFast <noreply@replyfast.com>`,
+    From: process.env.EMAIL_FROM || `${agentName} via Say Hello Leads <noreply@sayhelloleads.com>`,
     To: lead.email,
     Subject: `Re: ${lead.property}`,
     TextBody: aiReply,
