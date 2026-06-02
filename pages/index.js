@@ -55,9 +55,9 @@ export default function App() {
     source: 'Zillow', wantsSms: false,
   });
 
-  // Redirect to login only when trying to access protected views
+  // Redirect to login only for protected views
   useEffect(() => {
-    if (status === 'unauthenticated' && ['dashboard','demo','conversation','setup'].includes(view)) {
+    if (status === 'unauthenticated' && ['dashboard','setup'].includes(view)) {
       router.push('/login');
     }
   }, [status, view, router]);
@@ -290,7 +290,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             <h1>Never lose a lead to<br /><em>slow response</em> again</h1>
             <p>ReplyFast connects to Zillow, Homes.com, Realtor.com and your phone — responds to every lead in under 60 seconds — qualifies them overnight — and delivers hot-lead briefings right to your dashboard.</p>
             <div className="hero-cta">
-              <button className="btn-primary" onClick={() => session ? setView('demo') : router.push('/login')}>See it in action →</button>
+              <button className="btn-primary" onClick={() => setView('demo')}>See it in action →</button>
               <button className="btn-outline" onClick={() => session ? setView('dashboard') : router.push('/login')}>View agent dashboard</button>
             </div>
           </div>
@@ -327,7 +327,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 
           <div className="demo-cta-block">
             <h2>Watch it work on a <em>real lead</em> right now</h2>
-            <button className="btn-primary" onClick={() => session ? setView('demo') : router.push('/login')}>Try the live demo →</button>
+            <button className="btn-primary" onClick={() => setView('demo')}>Try the live demo →</button>
           </div>
         </section>
       )}
