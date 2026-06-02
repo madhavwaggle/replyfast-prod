@@ -187,7 +187,7 @@ export default function App() {
 
       const newHistory = [...initHistory, { role: 'assistant', content: reply }];
       setConversationHistory(newHistory);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'ReplyFast AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: reply }]);
       lead.messages.push({ role: 'ai', text: reply });
 
       // Send real SMS if requested
@@ -210,7 +210,7 @@ export default function App() {
       setCurrentLead({ ...lead });
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'ReplyFast AI', text: "Thanks for reaching out! I'll have the agent contact you very soon. What's your timeline for moving?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: "Thanks for reaching out! I'll have the agent contact you very soon. What's your timeline for moving?" }]);
     }
     setSubmitting(false);
   }
@@ -228,7 +228,7 @@ export default function App() {
     setCurrentLead(updatedLead);
 
     setIsTyping(true);
-    const systemPrompt = `You are ReplyFast, an AI real estate lead assistant. You're texting with ${currentLead.fname} about ${currentLead.property}.
+    const systemPrompt = `You are a Say Hello Leads AI real estate lead assistant. You're texting with ${currentLead.fname} about ${currentLead.property}.
 Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sentences max). If they want a showing, offer 2-3 realistic time slots.`;
 
     try {
@@ -237,7 +237,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       setIsTyping(false);
 
       setConversationHistory(prev => [...prev, { role: 'assistant', content: reply }]);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'ReplyFast AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: reply }]);
 
       const finalLead = { ...updatedLead, messages: [...updatedLead.messages, { role: 'ai', text: reply }], updatedAt: new Date().toISOString() };
       setCurrentLead(finalLead);
@@ -252,7 +252,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       }
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'ReplyFast AI', text: "Great point! Let me check on that for you — can I get your best callback number?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: "Great point! Let me check on that for you — can I get your best callback number?" }]);
     }
   }
 
@@ -296,7 +296,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
     })));
     setChatMessages(lead.messages.map(m => ({
       role: m.role,
-      name: m.role === 'ai' ? 'ReplyFast AI' : `${lead.fname} ${lead.lname}`,
+      name: m.role === 'ai' ? 'Say Hello Leads AI' : `${lead.fname} ${lead.lname}`,
       text: m.text,
     })));
     setView('conversation');
@@ -313,7 +313,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
   return (
     <>
       <Head>
-        <title>ReplyFast — AI Lead Response</title>
+        <title>Say Hello Leads — AI Lead Response</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
@@ -323,10 +323,10 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 
       {/* NAV */}
       <nav>
-        <div className="logo">Reply<span>Fast</span></div>
+        <div className="logo">Say Hello <span>Leads</span></div>
         <div className="nav-links">
           <a onClick={() => setView('landing')}>Home</a>
-          {session && <a onClick={() => setView('demo')}>Try Demo</a>}
+          {session && <a onClick={() => setView('demo')}>Agent Demo</a>}
           {session && <a onClick={() => setView('dashboard')}>Dashboard</a>}
           {session && <a onClick={() => setView('setup')}>Setup</a>}
           {session ? (
@@ -346,15 +346,15 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
           <div className="hero">
             <div className="hero-badge">✦ AI-powered lead response</div>
             <h1>Never lose a lead to<br /><em>slow response</em> again</h1>
-            <p>ReplyFast connects to Zillow, Homes.com, Realtor.com and your phone — responds to every lead in under 60 seconds — qualifies them overnight — and delivers hot-lead briefings right to your dashboard.</p>
+            <p>Say Hello Leads connects to Zillow, Homes.com, Realtor.com and your phone — responds to every lead in under 60 seconds — qualifies them overnight — and delivers hot-lead briefings right to your dashboard.</p>
             <div className="hero-cta">
-              <button className="btn-primary" onClick={() => setView('demo')}>See it in action →</button>
+              <button className="btn-primary" onClick={() => setView('demo')}>Try the agent demo →</button>
               <button className="btn-outline" onClick={() => session ? setView('dashboard') : router.push('/login')}>View agent dashboard</button>
             </div>
           </div>
 
           <div className="stats-bar">
-            {[['15 hrs','avg agent response time'],['41%','leads never contacted'],['<60s','ReplyFast response time'],['$14k+','avg monthly revenue left on table']].map(([n,l]) => (
+            {[['15 hrs','avg agent response time'],['41%','leads never contacted'],['<60s','Say Hello Leads response time'],['$14k+','avg monthly revenue left on table']].map(([n,l]) => (
               <div className="stat-item" key={l}><div className="stat-num">{n}</div><div className="stat-label">{l}</div></div>
             ))}
           </div>
@@ -384,8 +384,8 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
           </div>
 
           <div className="demo-cta-block">
-            <h2>Watch it work on a <em>real lead</em> right now</h2>
-            <button className="btn-primary" onClick={() => setView('demo')}>Try the live demo →</button>
+            <h2>See exactly how your leads experience <em>instant AI response</em></h2>
+            <button className="btn-primary" onClick={() => setView('demo')}>Try the agent demo →</button>
           </div>
         </section>
       )}
@@ -395,11 +395,11 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
         <section className="fade-in" style={{ maxWidth: '560px', margin: '3rem auto', padding: '0 1.5rem 4rem' }}>
           <a className="back-link" onClick={() => setView('landing')}>← Back</a>
           <div className="demo-header">
-            <h2>Try the demo</h2>
-            <p>Fill in a fake lead — see how ReplyFast's AI responds in real time.</p>
+            <h2>Agent demo tool</h2>
+            <p>Simulate a buyer inquiry to preview exactly how Say Hello Leads responds on your behalf — in real time.</p>
           </div>
           <div className="form-card">
-            <h3>Lead inquiry form <span className="tag">as seen by buyer</span></h3>
+            <h3>Simulated buyer inquiry <span className="tag">agent preview</span></h3>
             <div className="field-row">
               <div className="field"><label>First name</label><input value={form.fname} onChange={e => setForm(f => ({...f, fname: e.target.value}))} placeholder="e.g. Maria" /></div>
               <div className="field"><label>Last name</label><input value={form.lname} onChange={e => setForm(f => ({...f, lname: e.target.value}))} placeholder="e.g. Chen" /></div>
@@ -422,9 +422,9 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             </div>
           </div>
           <button className="submit-btn" disabled={submitting} onClick={submitLead}>
-            {submitting ? 'Processing…' : 'Submit lead & see AI response →'}
+            {submitting ? 'Processing…' : 'Simulate lead & see AI response →'}
           </button>
-          <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>Powered by Claude AI. Try anything realistic — budget questions, timeline, objections.</p>
+          <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>This is your agent demo. Try realistic scenarios — budget, timeline, objections — to see how the AI handles them.</p>
         </section>
       )}
 
@@ -455,7 +455,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             ))}
             {isTyping && (
               <div className="typing">
-                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>ReplyFast AI</span>
+                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>Say Hello Leads AI</span>
                 <div className="dot" /><div className="dot" /><div className="dot" />
               </div>
             )}
@@ -504,6 +504,30 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
           </div>
 
           <div className="dash-body">
+
+            {/* SHAREABLE LINK BANNER */}
+            {session && (() => {
+              const slug = session.user?.name
+                ? session.user.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-')
+                : null;
+              const shareUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/agent/${slug}` : null;
+              return shareUrl ? (
+                <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1rem 1.25rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.2rem' }}>Your public inquiry page</div>
+                    <div style={{ fontSize: '14px', color: 'var(--black)', fontFamily: 'monospace' }}>{shareUrl}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '.2rem' }}>Share this link — buyers fill out the form and leads come straight to you.</div>
+                  </div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(shareUrl); }}
+                    style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.5rem 1.1rem', fontSize: '13px', fontWeight: '500', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    Copy link
+                  </button>
+                </div>
+              ) : null;
+            })()}
+
             <div className="dash-kpis">
               <div className="kpi highlight"><div className="kpi-label">response time</div><div className="kpi-val">&lt;60s</div><div className="kpi-sub">vs 15hr industry avg</div></div>
               <div className="kpi"><div className="kpi-label">total leads</div><div className="kpi-val">{stats.total}</div><div className="kpi-sub">all time</div></div>
@@ -570,7 +594,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
                       <div className="detail-convo">
                         {(lead.messages || []).map((m, i) => (
                           <div key={i} className={`mini-msg ${m.role}`}>
-                            <div className="who">{m.role === 'ai' ? 'ReplyFast AI' : lead.fname}</div>
+                            <div className="who">{m.role === 'ai' ? 'Say Hello Leads AI' : lead.fname}</div>
                             {m.text}
                           </div>
                         ))}
@@ -638,7 +662,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 
           <a className="back-link" onClick={() => setView('landing')}>← Back</a>
           <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.5rem' }}>Integration Setup Guide</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '2.5rem' }}>Follow these steps to deploy ReplyFast with real SMS, email, and lead persistence.</p>
+          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '2.5rem' }}>Follow these steps to deploy Say Hello Leads with real SMS, email, and lead persistence.</p>
 
           {SETUP_STEPS.map((s, i) => (
             <div className="setup-step" key={i}>
@@ -655,12 +679,12 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 // ─── SYSTEM PROMPT BUILDER ────────────────────────────────────────────────────
 
 function buildSystemPrompt(fname, lname, email, phone, property, source, message, agentName) {
-  return `You are ReplyFast, an AI real estate lead assistant working on behalf of ${agentName || 'your agent'}. A new lead just came in.
+  return `You are a Say Hello Leads AI real estate lead assistant working on behalf of ${agentName || 'your agent'}. A new lead just came in.
 
 Lead: ${fname} ${lname} | Email: ${email} | Phone: ${phone || 'not provided'} | Property: ${property} | Source: ${source}
 Their message: "${message}"
 
-Respond warmly and professionally. Reference the specific property. Ask ONE qualifying question (timeline, budget, pre-approval, or if they're also selling). Under 4 sentences. Sound like a real, helpful person. Sign off as "ReplyFast AI, on behalf of your agent".`;
+Respond warmly and professionally. Reference the specific property. Ask ONE qualifying question (timeline, budget, pre-approval, or if they're also selling). Under 4 sentences. Sound like a real, helpful person. Sign off as "Say Hello Leads AI, on behalf of your agent".`;
 }
 
 // ─── SETUP STEPS ─────────────────────────────────────────────────────────────
@@ -669,8 +693,8 @@ const SETUP_STEPS = [
   {
     title: 'Deploy to Vercel',
     body: `Push to GitHub then import at <a href="https://vercel.com" target="_blank">vercel.com</a>. Vercel auto-detects Next.js.
-<div class="code-block">git init && git add . && git commit -m "Initial ReplyFast"
-git remote add origin https://github.com/YOUR/replyfast.git
+<div class="code-block">git init && git add . && git commit -m "Initial Say Hello Leads"
+git remote add origin https://github.com/YOUR/sayhelloleads.git
 git push -u origin main</div>`,
   },
   {
@@ -701,7 +725,7 @@ git push -u origin main</div>`,
   },
   {
     title: 'Connect your website contact form',
-    body: `Add a shared secret header for security, then POST to your ReplyFast endpoint:
+    body: `Add a shared secret header for security, then POST to your Say Hello Leads endpoint:
 <div class="code-block">fetch('https://YOUR-APP.vercel.app/api/new-lead', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'x-webhook-secret': 'YOUR_SECRET' },
