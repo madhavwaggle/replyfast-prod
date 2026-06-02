@@ -1,50 +1,37 @@
 /**
  * /api/chat
  * Secure Claude API proxy — API key never exposed to browser.
- * Requires authentication.
+ * Authenticated agents: 120 req/hour
+ * Public demo (unauthenticated): 20 req/hour per IP
  */
 
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../lib/auth';
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Rate limiting — simple in-memory counter (use Redis for production scale)
 const rateLimitMap = new Map();
-const RATE_LIMIT = 60; // requests per hour per session
-const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
 
-function checkRateLimit(sessionId) {
+function checkRateLimit(key, limit, windowMs) {
   const now = Date.now();
-  const record = rateLimitMap.get(sessionId) || { count: 0, resetAt: now + RATE_WINDOW };
-  
-  if (now > record.resetAt) {
-    record.count = 0;
-    record.resetAt = now + RATE_WINDOW;
-  }
-  
+  const record = rateLimitMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > record.resetAt) { record.count = 0; record.resetAt = now + windowMs; }
   record.count++;
-  rateLimitMap.set(sessionId, record);
-  
-  return record.count <= RATE_LIMIT;
+  rateLimitMap.set(key, record);
+  return record.count <= limit;
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Auth check
+  // Auth — optional. Authenticated users get higher rate limits.
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const ip = req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+  const rateLimitKey = session ? `auth:${session.user.email}` : `ip:${ip}`;
+  const rateLimit = session ? 120 : 20;
 
-  // Rate limit
-  if (!checkRateLimit(session.user.email)) {
+  if (!checkRateLimit(rateLimitKey, rateLimit, 60 * 60 * 1000)) {
     return res.status(429).json({ error: 'Rate limit exceeded. Try again in an hour.' });
   }
 
@@ -54,18 +41,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid messages format' });
   }
 
-  // Sanitize messages
   const sanitized = messages
     .filter(m => m && m.role && m.content)
-    .slice(-20) // Keep last 20 messages to manage context window costs
+    .slice(-20)
     .map(m => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content).slice(0, 2000), // Limit per message
+      content: String(m.content).slice(0, 2000),
     }));
 
-  if (sanitized.length === 0) {
-    return res.status(400).json({ error: 'No valid messages' });
-  }
+  if (sanitized.length === 0) return res.status(400).json({ error: 'No valid messages' });
 
   try {
     const response = await anthropic.messages.create({
@@ -74,14 +58,11 @@ export default async function handler(req, res) {
       system: system ? String(system).slice(0, 4000) : undefined,
       messages: sanitized,
     });
-
-    const reply = response.content?.[0]?.text || '';
-    return res.status(200).json({ reply, usage: response.usage });
+    return res.status(200).json({ reply: response.content?.[0]?.text || '' });
   } catch (error) {
     console.error('Claude API error:', error);
-    if (error.status === 429) {
-      return res.status(429).json({ error: 'AI service rate limited. Please wait a moment.' });
-    }
+    if (error.status === 429) return res.status(429).json({ error: 'AI rate limited. Try again shortly.' });
+    if (error.status === 401) return res.status(500).json({ error: 'AI API key invalid — check ANTHROPIC_API_KEY in Vercel env vars.' });
     return res.status(500).json({ error: 'AI service error' });
   }
 }
