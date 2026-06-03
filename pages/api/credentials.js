@@ -1,5 +1,5 @@
 /**
- * /api/credentials.js
+ * /api/credentials
  * GET  — return agent's saved integration credentials (values masked for display)
  * PUT  — save/update one or more credential fields
  *
@@ -7,16 +7,15 @@
  * Values are stored in plaintext in Redis (Upstash is encrypted at rest).
  * We mask values on GET so they never travel back to the browser unnecessarily.
  *
- * Supported fields:
- *   anthropicKey, resendKey, twilioSid, twilioToken, twilioPhone,
- *   postmarkToken, emailFrom, webhookSecret
+ * Agent-settable fields (anthropicKey + resendKey are owner-only via env vars):
+ *   twilioSid, twilioToken, twilioPhone, postmarkToken, emailFrom, webhookSecret
  */
 
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../lib/auth';
 
+// anthropicKey and resendKey are owner-only (env vars) — agents cannot set them
 const FIELDS = [
-  'anthropicKey', 'resendKey',
   'twilioSid', 'twilioToken', 'twilioPhone',
   'postmarkToken', 'emailFrom',
   'webhookSecret',
