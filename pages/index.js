@@ -269,7 +269,7 @@ export default function App() {
 
       const newHistory = [...initHistory, { role: 'assistant', content: reply }];
       setConversationHistory(newHistory);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: session?.user?.name || 'Agent', text: reply }]);
       lead.messages.push({ role: 'ai', text: reply });
 
       // Send real SMS if requested
@@ -292,7 +292,7 @@ export default function App() {
       setCurrentLead({ ...lead });
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: "Thanks for reaching out! I'll have the agent contact you very soon. What's your timeline for moving?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: session?.user?.name || 'Agent', text: "Thanks for reaching out! Tell me more — what's your timeline for moving?" }]);
     }
     setSubmitting(false);
   }
@@ -310,7 +310,7 @@ export default function App() {
     setCurrentLead(updatedLead);
 
     setIsTyping(true);
-    const systemPrompt = `You are a Say HelloLeads AI real estate lead assistant. You're texting with ${currentLead.fname} about ${currentLead.property}.
+    const systemPrompt = `You are a real estate assistant texting on behalf of ${session?.user?.name || 'the agent'} about ${currentLead.property}. Sound human and warm. Never mention AI.
 Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sentences max). If they want a showing, offer 2-3 realistic time slots.`;
 
     try {
@@ -319,7 +319,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       setIsTyping(false);
 
       setConversationHistory(prev => [...prev, { role: 'assistant', content: reply }]);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: session?.user?.name || 'Agent', text: reply }]);
 
       const finalLead = { ...updatedLead, messages: [...updatedLead.messages, { role: 'ai', text: reply }], updatedAt: new Date().toISOString() };
       setCurrentLead(finalLead);
@@ -334,7 +334,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       }
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: "Great point! Let me check on that for you — can I get your best callback number?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: session?.user?.name || 'Agent', text: "Let me look into that — can I get your best callback number?" }]);
     }
   }
 
@@ -379,7 +379,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
     })));
     setChatMessages(lead.messages.map(m => ({
       role: m.role,
-      name: m.role === 'ai' ? 'Say HelloLeads AI' : `${lead.fname} ${lead.lname}`,
+      name: m.role === 'ai' ? (session?.user?.name || 'Agent') : `${lead.fname} ${lead.lname}`,
       text: m.text,
     })));
     setView('conversation');
@@ -641,11 +641,11 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
         <section className="fade-in" style={{ maxWidth: '560px', margin: '3rem auto', padding: '0 1.5rem 4rem' }}>
           <a className="back-link" onClick={() => setView('landing')}>← Back</a>
           <div className="demo-header">
-            <h2>Agent demo tool</h2>
-            <p>Simulate a buyer inquiry to preview exactly how Say HelloLeads responds on your behalf — in real time.</p>
+            <h2>See it from a buyer's side</h2>
+            <p>Enter a fake lead below and watch how your page responds — exactly what a real buyer would experience.</p>
           </div>
           <div className="form-card">
-            <h3>Simulated buyer inquiry <span className="tag">agent preview</span></h3>
+            <h3>Fake buyer inquiry <span className="tag">you're the agent</span></h3>
             <div className="field-row">
               <div className="field"><label>First name</label><input value={form.fname} onChange={e => setForm(f => ({...f, fname: e.target.value}))} placeholder="e.g. Maria" /></div>
               <div className="field"><label>Last name</label><input value={form.lname} onChange={e => setForm(f => ({...f, lname: e.target.value}))} placeholder="e.g. Chen" /></div>
@@ -668,9 +668,9 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             </div>
           </div>
           <button className="submit-btn" disabled={submitting} onClick={submitLead}>
-            {submitting ? 'Processing…' : 'Simulate lead & see AI response →'}
+            {submitting ? 'Connecting…' : 'See what your buyer experiences →'}
           </button>
-          <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>This is your agent demo. Try realistic scenarios — budget, timeline, objections — to see how the AI handles them.</p>
+          <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>This is a preview only. Use a fake name — you're seeing exactly what a real buyer would see on your page.</p>
         </section>
       )}
 
@@ -701,7 +701,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             ))}
             {isTyping && (
               <div className="typing">
-                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>Say HelloLeads AI</span>
+                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>{session?.user?.name || 'Agent'}</span>
                 <div className="dot" /><div className="dot" /><div className="dot" />
               </div>
             )}
@@ -889,7 +889,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                       <div className="detail-convo">
                         {(lead.messages || []).map((m, i) => (
                           <div key={i} className={`mini-msg ${m.role}`}>
-                            <div className="who">{m.role === 'ai' ? 'Say HelloLeads AI' : lead.fname}</div>
+                            <div className="who">{m.role === 'ai' ? (session?.user?.name || 'Agent') : lead.fname}</div>
                             {m.text}
                           </div>
                         ))}
@@ -964,7 +964,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <a className="back-link" onClick={() => setView('profile')}>← Profile</a>
           <div style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Connect your lead sources</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>AI responses and email alerts are handled by Say HelloLeads — no API keys needed. Just connect where your leads come from.</p>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Instant responses and lead alerts are handled for you — just connect where your leads come from.</p>
           </div>
 
           {/* ── WHAT'S INCLUDED BANNER ───────────────────────────────── */}
