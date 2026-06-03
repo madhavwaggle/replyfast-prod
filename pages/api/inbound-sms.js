@@ -1,92 +1,108 @@
 /**
- * /api/inbound-sms — Twilio webhook
- * Routes inbound SMS to the correct agent based on the Twilio number texted.
+ * /api/inbound-sms
+ * Twilio inbound SMS webhook.
+ * Twilio sends a POST when someone texts the agent's Twilio number.
+ * We match the To number to the agent, then AI responds via SMS.
+ * Webhook URL: https://www.sayhelloleads.com/api/inbound-sms
  */
-import { saveLead, getAllLeads } from '../../lib/db';
+
+import { saveLead, getLead, getAllLeads } from '../../lib/db';
 import { getUserById } from '../../lib/users';
-import { notifyAgentNewLead } from '../../lib/notify';
-import { getAgentIdForPhone } from './phone-route';
+import { getAgentConfig } from '../../lib/agentConfig';
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const from = req.body?.From || '';
-  const to   = req.body?.To   || '';
-  const body = req.body?.Body || '';
-  if (!from || !body) return res.status(400).send('Missing From or Body');
+  const { From, To, Body } = req.body;
+  if (!From || !Body) return res.status(400).end();
 
-  const agentId = await getAgentIdForPhone(to);
+  // Find agent whose twilioPhone matches the To number
+  const agentId = await findAgentByTwilioPhone(To);
   if (!agentId) {
-    res.setHeader('Content-Type', 'text/xml');
-    return res.status(200).send(twiml("Thanks for reaching out! We'll be in touch shortly."));
+    console.warn('No agent found for Twilio number:', To);
+    return res.status(200).send('<Response></Response>');
   }
 
   const agent = await getUserById(agentId).catch(() => null);
-  const agentName = agent?.name || process.env.AGENT_NAME || 'your agent';
+  const cfg = await getAgentConfig(agentId);
+  if (!cfg.anthropicKey) return res.status(200).send('<Response></Response>');
 
-  const allLeads = await getAllLeads({ agentId, limit: 500 });
-  let lead = allLeads.find(l => l.phone === from);
-  const isNew = !lead;
+  // Find existing open lead from this phone number, or create new
+  const existingLeads = await getAllLeads({ agentId, limit: 200 });
+  let lead = existingLeads.find(l => l.phone === From);
 
   if (!lead) {
     lead = {
-      id: uuidv4(), agentId, fname: 'SMS', lname: 'Lead',
-      email: '', phone: from, property: 'SMS inquiry', source: 'SMS / Text',
+      id: uuidv4(), agentId,
+      fname: 'SMS', lname: 'Lead',
+      email: '', phone: From,
+      property: 'SMS inquiry',
+      source: 'SMS / Text',
       messages: [], score: null, summary: '', smsSent: true,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   }
 
-  lead.messages.push({ role: 'lead', text: body });
-  lead.updatedAt = new Date().toISOString();
-  await saveLead(lead);
+  lead.messages.push({ role: 'lead', text: Body });
 
-  const history = lead.messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+  const agentName = agent?.name || 'your agent';
+  const anthropic = new Anthropic({ apiKey: cfg.anthropicKey });
+
+  const conversationContext = lead.messages
+    .slice(-6)
+    .map(m => `${m.role === 'ai' ? 'Assistant' : 'Lead'}: ${m.text}`)
+    .join('\n');
 
   try {
     const resp = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514', max_tokens: 200,
-      system: `You are a Say Hello Leads AI assistant for ${agentName}. You're responding via SMS. Keep replies SHORT (1-3 sentences). Qualify the lead. Sign off as "- Say Hello Leads AI" only on first message.`,
-      messages: history,
+      system: `You are a Say Hello Leads AI assistant for ${agentName}. Responding via SMS — keep replies SHORT (1-3 sentences). Qualify the lead. Sign off as "- ${agentName} (Say Hello Leads AI)" only on first message.`,
+      messages: [{ role: 'user', content: conversationContext }],
     });
 
-    const aiReply = resp.content?.[0]?.text || "Thanks for reaching out! What property are you interested in?";
+    const aiReply = resp.content?.[0]?.text || "Thanks for reaching out! I'll have your agent contact you shortly.";
     lead.messages.push({ role: 'ai', text: aiReply });
     lead.updatedAt = new Date().toISOString();
-
-    if (isNew) {
-      try {
-        const sr = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514', max_tokens: 100,
-          system: 'Lead scoring. Respond ONLY valid JSON, no markdown.',
-          messages: [{ role: 'user', content: `Score HOT/WARM/COLD. Message: "${body}". JSON: {"score":"WARM","summary":"Brief note."}` }],
-        });
-        const p = JSON.parse(sr.content?.[0]?.text?.replace(/```json|```/g, '').trim());
-        lead.score = p.score || 'WARM';
-        lead.summary = p.summary || `SMS lead from ${from}.`;
-      } catch { lead.score = 'WARM'; lead.summary = `New SMS lead from ${from}.`; }
-
-      const agentEmail = agent?.notifyEmail || agent?.email || process.env.AGENT_EMAIL;
-      if (agentEmail) notifyAgentNewLead(lead, agentEmail, agentName).catch(console.error);
-    }
+    if (!lead.score) lead.score = 'WARM';
+    if (!lead.summary) lead.summary = `${lead.fname} texted about ${lead.property}. Follow up needed.`;
 
     await saveLead(lead);
+
+    // Reply via Twilio TwiML
     res.setHeader('Content-Type', 'text/xml');
-    return res.status(200).send(twiml(aiReply.slice(0, 1600)));
+    return res.status(200).send(`<Response><Message>${aiReply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Message></Response>`);
   } catch (e) {
-    console.error('Inbound SMS error:', e);
+    console.error('SMS AI error:', e);
     res.setHeader('Content-Type', 'text/xml');
-    return res.status(200).send(twiml("Thanks for reaching out! We'll get back to you shortly."));
+    return res.status(200).send('<Response></Response>');
   }
 }
 
-function twiml(msg) {
-  const esc = msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
-  return `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${esc}</Message></Response>`;
+async function findAgentByTwilioPhone(phone) {
+  if (!phone) return null;
+  try {
+    if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+      const { Redis } = await import('@upstash/redis');
+      const redis = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
+      // Check direct index
+      const agentId = await redis.get(`twilio:phone:${phone}`);
+      if (agentId) return agentId;
+      // Fallback: scan creds
+      const ids = await redis.zrange('users:index', 0, -1);
+      for (const id of ids) {
+        const raw = await redis.get(`creds:${id}`);
+        const creds = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : {};
+        if (creds.twilioPhone === phone) {
+          await redis.set(`twilio:phone:${phone}`, id);
+          return id;
+        }
+      }
+    }
+  } catch (e) { console.error('findAgentByTwilioPhone error:', e); }
+  return null;
 }
 
 export const config = { api: { bodyParser: { type: 'application/x-www-form-urlencoded' } } };
