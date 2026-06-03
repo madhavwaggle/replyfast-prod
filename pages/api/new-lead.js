@@ -45,7 +45,12 @@ export default async function handler(req, res) {
   };
 
   await saveLead(lead);
-  triggerAIResponse(lead, agent, cfg).catch(console.error);
+  try {
+    await Promise.race([
+      triggerAIResponse(lead, agent, cfg),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('AI timeout')), 25000)),
+    ]);
+  } catch (e) { console.error('AI error:', e.message); }
   return res.status(200).json({ id, message: 'Lead received' });
 }
 
@@ -117,10 +122,12 @@ Respond warmly, reference the property, ask one qualifying question (timeline, b
 
     // Notify agent
     const agentEmail = agent?.notifyEmail || agent?.email;
-    if (agentEmail && cfg.resendKey) {
+    if (agentEmail) {
       await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey).catch(console.error);
     }
   } catch (e) {
     console.error('AI trigger error:', e);
   }
 }
+
+export const config = { maxDuration: 30 };
