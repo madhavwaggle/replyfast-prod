@@ -508,7 +508,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             </div>
 
             <div className="section-label">The solution</div>
-            <div className="section-title">Say Hello AI works while you sleep.</div>
+            <div className="section-title">Say HelloLeads works while you sleep.</div>
             <div className="steps">
               {[
                 ['1', 'Lead comes in — any source', 'Zillow, Homes.com, Realtor.com, a text, or your website. Any time, day or night.'],
