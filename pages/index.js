@@ -406,7 +406,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
 
       {/* NAV */}
       <nav>
-        <div className="logo">Say Hello <span>Leads</span></div>
+        <div className="logo">Say <span>HelloLeads</span></div>
         <div className="nav-links">
           <a onClick={() => setView('landing')}>Home</a>
           {session && <a onClick={() => setView('dashboard')}>Dashboard</a>}
