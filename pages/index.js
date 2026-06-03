@@ -870,78 +870,87 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             )}
           </IntegCard>
 
-          {/* ── ZILLOW ───────────────────────────────────────────────── */}
-          <IntegCard
-            icon="🏠" title="Zillow Premier Agent" badge="Email forwarding"
-            status={false}
-            desc={<>Forward your Zillow lead notification emails to Say Hello Leads. No API key needed — just a one-time email setting.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://premieragent.zillow.com" target="_blank" style={{color:'var(--sage)'}}>Zillow Premier Agent</a><br/>2. Go to Settings → Contact preferences → Lead notification email<br/>3. Add your unique forwarding address below as an additional recipient:<br/>{session?.user?.id && <code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'6px',wordBreak:'break-all'}}>{session.user.id}@inbound.postmarkapp.com</code>}<br/><br/>That's it — new Zillow leads will flow into your dashboard automatically.</>}
-          >
-            {session?.user?.id && (
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
+          {/* ── ZILLOW / HOMES.COM / REALTOR.COM ─────────────────────── */}
+          {(() => {
+            const agentId = session?.user?.id || '';
+            const inboundAddr = agentId ? `${agentId}@inbound.postmarkapp.com` : '';
+            const ForwardingAddress = ({ addr }) => addr ? (
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem', marginTop: '.75rem' }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
-                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
-                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
+                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{addr}</code>
+                  <button onClick={() => navigator.clipboard.writeText(addr)}
                     style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                     Copy
                   </button>
                 </div>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '.4rem' }}>Add this as an additional recipient in your lead notification settings.</div>
               </div>
-            )}
-          </IntegCard>
+            ) : null;
 
-          {/* ── HOMES.COM ────────────────────────────────────────────── */}
-          <IntegCard
-            icon="🏡" title="Homes.com" badge="Email forwarding"
-            status={false}
-            desc={<>Same process as Zillow — forward lead emails to your unique address.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://homes.com" target="_blank" style={{color:'var(--sage)'}}>Homes.com</a> agent portal<br/>2. Account Settings → Notifications → Lead notification email<br/>3. Add your forwarding address as an additional recipient</>}
-          >
-            {session?.user?.id && (
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
-                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
-                    style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    Copy
-                  </button>
+            return (<>
+              <IntegCard icon="🏠" title="Zillow Premier Agent" badge="Email forwarding" status={false}
+                desc="Forward your Zillow lead notification emails to Say Hello Leads — no API key needed, just a one-time setting change."
+                link="https://premieragent.zillow.com" linkLabel="Open Zillow Premier Agent →"
+              >
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.5rem' }}>
+                  <strong style={{ color: 'var(--black)' }}>Steps:</strong><br/>
+                  1. Log into Zillow Premier Agent<br/>
+                  2. Settings → Contact preferences → Lead notification email<br/>
+                  3. Add your forwarding address as an <em>additional</em> recipient
                 </div>
-              </div>
-            )}
-          </IntegCard>
+                <ForwardingAddress addr={inboundAddr} />
+              </IntegCard>
 
-          {/* ── REALTOR.COM ──────────────────────────────────────────── */}
-          <IntegCard
-            icon="🔑" title="Realtor.com" badge="Email forwarding"
-            status={false}
-            desc={<>Forward Realtor.com lead alerts to your Say Hello Leads address.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://realtorpro.realtor.com" target="_blank" style={{color:'var(--sage)'}}>Realtor.com Pro</a><br/>2. My Account → Notifications → Email for new leads<br/>3. Add your forwarding address as an additional notification email</>}
-          >
-            {session?.user?.id && (
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
-                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
-                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
-                    style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    Copy
-                  </button>
+              <IntegCard icon="🏡" title="Homes.com" badge="Email forwarding" status={false}
+                desc="Same process — forward Homes.com lead emails to your unique address."
+                link="https://homes.com" linkLabel="Open Homes.com portal →"
+              >
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.5rem' }}>
+                  <strong style={{ color: 'var(--black)' }}>Steps:</strong><br/>
+                  1. Log into Homes.com agent portal<br/>
+                  2. Account Settings → Notifications → Lead notification email<br/>
+                  3. Add your forwarding address as an additional recipient
                 </div>
-              </div>
-            )}
-          </IntegCard>
+                <ForwardingAddress addr={inboundAddr} />
+              </IntegCard>
 
-          {/* ── WEBSITE / ZAPIER ─────────────────────────────────────── */}
-          <IntegCard
-            icon="⚡" title="Your website or Zapier" badge="Any source"
-            desc={<>Already have a contact form on your website, or use another CRM? Send leads straight to your dashboard via a simple webhook.<br/><br/><strong>Webhook URL:</strong><br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'4px',wordBreak:'break-all'}}>POST https://www.sayhelloleads.com/api/new-lead</code><br/><br/>Include this header so leads route to your account:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>x-agent-id: {session?.user?.id || 'your-agent-id'}</code><br/><br/>Body fields: <code style={{fontSize:'11px'}}>fname, lname, email, phone, property, message, source</code></>}
-            link="https://zapier.com" linkLabel="Open Zapier →"
-          >
-            <CredField
-              label="Webhook secret (optional — adds security)" field="webhookSecret" placeholder="any random string"
-              current={creds.webhookSecret} saving={credsSaving.webhookSecret} msg={credsMsg.webhookSecret}
-              onSave={saveCred}
-            />
-          </IntegCard>
+              <IntegCard icon="🔑" title="Realtor.com" badge="Email forwarding" status={false}
+                desc="Forward Realtor.com lead alerts to your Say Hello Leads address."
+                link="https://realtorpro.realtor.com" linkLabel="Open Realtor.com Pro →"
+              >
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.5rem' }}>
+                  <strong style={{ color: 'var(--black)' }}>Steps:</strong><br/>
+                  1. Log into Realtor.com Pro<br/>
+                  2. My Account → Notifications → Email for new leads<br/>
+                  3. Add your forwarding address as an additional notification email
+                </div>
+                <ForwardingAddress addr={inboundAddr} />
+              </IntegCard>
+
+              <IntegCard icon="⚡" title="Your website or Zapier" badge="Any source"
+                desc="Connect any lead source via a simple webhook POST. Works with Zapier, your own contact form, or any CRM."
+                link="https://zapier.com" linkLabel="Open Zapier →"
+              >
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.75rem' }}>
+                  <strong style={{ color: 'var(--black)' }}>Webhook URL:</strong><br/>
+                  <code style={{ fontSize: '12px', background: '#f3f4f6', padding: '3px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px', wordBreak: 'break-all' }}>
+                    POST https://www.sayhelloleads.com/api/new-lead
+                  </code><br/><br/>
+                  <strong style={{ color: 'var(--black)' }}>Required header:</strong><br/>
+                  <code style={{ fontSize: '12px', background: '#f3f4f6', padding: '3px 8px', borderRadius: '4px', display: 'inline-block', marginTop: '4px' }}>
+                    x-agent-id: {agentId || 'your-agent-id'}
+                  </code><br/><br/>
+                  Body fields: <code style={{ fontSize: '11px' }}>fname, lname, email, phone, property, message, source</code>
+                </div>
+                <CredField
+                  label="Webhook secret (optional — adds security)" field="webhookSecret" placeholder="any random string"
+                  current={creds.webhookSecret} saving={credsSaving.webhookSecret} msg={credsMsg.webhookSecret}
+                  onSave={saveCred}
+                />
+              </IntegCard>
+            </>);
+          })()}
 
           {/* ── CUSTOM SEND-FROM EMAIL ───────────────────────────────── */}
           <IntegCard
