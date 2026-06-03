@@ -639,13 +639,13 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                   {[
-                    { done: checklist.profile,   label: 'Complete your profile',          view: 'profile',       hint: 'Name + notification email' },
-                    { done: checklist.anthropic,  label: 'Add your Anthropic API key',     view: 'integrations',  hint: 'Powers AI responses' },
-                    { done: checklist.email,      label: 'Connect email notifications',    view: 'integrations',  hint: 'Resend or Postmark' },
-                    { done: checklist.sms,        label: 'Connect Twilio SMS (optional)',  view: 'integrations',  hint: 'AI responds via text' },
+                    { done: checklist.profile,   label: 'Complete your profile',          dest: 'profile',       hint: 'Name + notification email' },
+                    { done: checklist.anthropic,  label: 'Add your Anthropic API key',     dest: 'integrations',  hint: 'Powers AI responses' },
+                    { done: checklist.email,      label: 'Connect email notifications',    dest: 'integrations',  hint: 'Resend or Postmark' },
+                    { done: checklist.sms,        label: 'Connect Twilio SMS (optional)',  dest: 'integrations',  hint: 'AI responds via text' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', cursor: item.done ? 'default' : 'pointer' }}
-                      onClick={() => !item.done && setView(item.view)}>
+                      onClick={() => !item.done && setView(item.dest)}>
                       <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: item.done ? 'var(--sage)' : 'var(--border)', color: '#fff', fontSize: '11px', fontWeight: '700' }}>
                         {item.done ? '✓' : i + 1}
