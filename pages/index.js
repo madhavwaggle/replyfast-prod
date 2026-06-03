@@ -58,7 +58,7 @@ export default function App() {
   const [credsSaving, setCredsSaving] = useState({});
   const [credsMsg, setCredsMsg]     = useState({});
   // Onboarding checklist
-  const [checklist, setChecklist]   = useState({ profile: false, anthropic: false, email: false, sms: false });
+  const [checklist, setChecklist]   = useState({ profile: false, zillow: false, sms: false, website: false });
   const chatRef = useRef(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef(null);
@@ -207,10 +207,10 @@ export default function App() {
       const p   = profData.profile || {};
       const c   = credsData.credentials || {};
       setChecklist({
-        profile:   !!(p.name && p.notifyEmail),
-        anthropic: !!(c.anthropicKey?.isSet),
-        email:     !!(c.twilioPhone?.isSet || c.webhookSecret?.isSet || c.postmarkToken?.isSet),
-        sms:       !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
+        profile: !!(p.name && p.notifyEmail),
+        zillow:  !!(c.postmarkToken?.isSet),
+        sms:     !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
+        website: !!(c.webhookSecret?.isSet),
       });
     } catch (e) { console.error('loadChecklist:', e); }
   }
@@ -632,17 +632,17 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
           <div className="dash-body">
 
             {/* ONBOARDING CHECKLIST — shown until all 4 steps done */}
-            {(!checklist.profile || !checklist.anthropic || !checklist.email || !checklist.sms) && (
+            {(!checklist.profile || !checklist.zillow || !checklist.sms || !checklist.website) && (
               <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '1rem', color: 'var(--black)' }}>
-                  🚀 Get set up — {[checklist.profile, checklist.anthropic, checklist.email, checklist.sms].filter(Boolean).length} of 4 steps done
+                  🚀 Get set up — {[checklist.profile, checklist.zillow, checklist.sms, checklist.website].filter(Boolean).length} of 4 steps done
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                   {[
-                    { done: checklist.profile,   label: 'Complete your profile',          dest: 'profile',       hint: 'Name + notification email' },
-                    { done: checklist.anthropic,  label: 'Add your Anthropic API key',     dest: 'integrations',  hint: 'Powers AI responses' },
-                    { done: checklist.email,      label: 'Connect a lead source',          dest: 'integrations',  hint: 'Zillow, SMS, or website' },
-                    { done: checklist.sms,        label: 'Connect Twilio SMS (optional)',  dest: 'integrations',  hint: 'AI responds via text' },
+                    { done: checklist.profile, label: 'Complete your profile',               dest: 'profile',       hint: 'Name + notification email' },
+                    { done: checklist.zillow,   label: 'Forward leads from Zillow / Homes.com', dest: 'integrations',  hint: '2-minute email setting' },
+                    { done: checklist.sms,      label: 'Connect Twilio for SMS replies',        dest: 'integrations',  hint: 'AI responds via text' },
+                    { done: checklist.website,  label: 'Connect your website or Zapier',        dest: 'integrations',  hint: 'Optional — any lead source' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', cursor: item.done ? 'default' : 'pointer' }}
                       onClick={() => !item.done && setView(item.dest)}>
