@@ -269,7 +269,7 @@ export default function App() {
 
       const newHistory = [...initHistory, { role: 'assistant', content: reply }];
       setConversationHistory(newHistory);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: reply }]);
       lead.messages.push({ role: 'ai', text: reply });
 
       // Send real SMS if requested
@@ -292,7 +292,7 @@ export default function App() {
       setCurrentLead({ ...lead });
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: "Thanks for reaching out! I'll have the agent contact you very soon. What's your timeline for moving?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: "Thanks for reaching out! I'll have the agent contact you very soon. What's your timeline for moving?" }]);
     }
     setSubmitting(false);
   }
@@ -310,7 +310,7 @@ export default function App() {
     setCurrentLead(updatedLead);
 
     setIsTyping(true);
-    const systemPrompt = `You are a Say Hello Leads AI real estate lead assistant. You're texting with ${currentLead.fname} about ${currentLead.property}.
+    const systemPrompt = `You are a Say HelloLeads AI real estate lead assistant. You're texting with ${currentLead.fname} about ${currentLead.property}.
 Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sentences max). If they want a showing, offer 2-3 realistic time slots.`;
 
     try {
@@ -319,7 +319,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       setIsTyping(false);
 
       setConversationHistory(prev => [...prev, { role: 'assistant', content: reply }]);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: reply }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: reply }]);
 
       const finalLead = { ...updatedLead, messages: [...updatedLead.messages, { role: 'ai', text: reply }], updatedAt: new Date().toISOString() };
       setCurrentLead(finalLead);
@@ -334,7 +334,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       }
     } catch (e) {
       setIsTyping(false);
-      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say Hello Leads AI', text: "Great point! Let me check on that for you — can I get your best callback number?" }]);
+      setChatMessages(prev => [...prev, { role: 'ai', name: 'Say HelloLeads AI', text: "Great point! Let me check on that for you — can I get your best callback number?" }]);
     }
   }
 
@@ -379,7 +379,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
     })));
     setChatMessages(lead.messages.map(m => ({
       role: m.role,
-      name: m.role === 'ai' ? 'Say Hello Leads AI' : `${lead.fname} ${lead.lname}`,
+      name: m.role === 'ai' ? 'Say HelloLeads AI' : `${lead.fname} ${lead.lname}`,
       text: m.text,
     })));
     setView('conversation');
@@ -396,7 +396,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
   return (
     <>
       <Head>
-        <title>Say Hello Leads — AI Lead Response</title>
+        <title>Say HelloLeads — AI Lead Response</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
@@ -462,7 +462,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <div className="hero">
             <div className="hero-badge">✦ Powered by AI · Built for real estate</div>
             <h1>Respond to every lead<br /><em>in 60 seconds.</em> Automatically.</h1>
-            <p>Most agents take 15 hours to reply. By then, the buyer has moved on. Say Hello Leads responds the moment a lead comes in — qualifies them overnight — and tells you exactly who to call first.</p>
+            <p>Most agents take 15 hours to reply. By then, the buyer has moved on. Say HelloLeads responds the moment a lead comes in — qualifies every lead — and tells you exactly who to call first.</p>
             <div className="hero-cta">
               <button className="btn-primary" onClick={() => router.push('/register')}>Start free — no credit card →</button>
               <button className="btn-outline" onClick={() => setView('demo')}>See live demo</button>
@@ -642,7 +642,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <a className="back-link" onClick={() => setView('landing')}>← Back</a>
           <div className="demo-header">
             <h2>Agent demo tool</h2>
-            <p>Simulate a buyer inquiry to preview exactly how Say Hello Leads responds on your behalf — in real time.</p>
+            <p>Simulate a buyer inquiry to preview exactly how Say HelloLeads responds on your behalf — in real time.</p>
           </div>
           <div className="form-card">
             <h3>Simulated buyer inquiry <span className="tag">agent preview</span></h3>
@@ -701,7 +701,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             ))}
             {isTyping && (
               <div className="typing">
-                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>Say Hello Leads AI</span>
+                <span style={{ fontSize: '11px', color: 'var(--sage)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '.04em', marginRight: '4px' }}>Say HelloLeads AI</span>
                 <div className="dot" /><div className="dot" /><div className="dot" />
               </div>
             )}
@@ -889,7 +889,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                       <div className="detail-convo">
                         {(lead.messages || []).map((m, i) => (
                           <div key={i} className={`mini-msg ${m.role}`}>
-                            <div className="who">{m.role === 'ai' ? 'Say Hello Leads AI' : lead.fname}</div>
+                            <div className="who">{m.role === 'ai' ? 'Say HelloLeads AI' : lead.fname}</div>
                             {m.text}
                           </div>
                         ))}
@@ -964,7 +964,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <a className="back-link" onClick={() => setView('profile')}>← Profile</a>
           <div style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Connect your lead sources</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>AI responses and email alerts are handled by Say Hello Leads — no API keys needed. Just connect where your leads come from.</p>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>AI responses and email alerts are handled by Say HelloLeads — no API keys needed. Just connect where your leads come from.</p>
           </div>
 
           {/* ── WHAT'S INCLUDED BANNER ───────────────────────────────── */}
@@ -1029,7 +1029,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
 
             return (<>
               <IntegCard icon="🏠" title="Zillow Premier Agent" badge="Email forwarding" status={false}
-                desc="Forward your Zillow lead notification emails to Say Hello Leads — no API key needed, just a one-time setting change."
+                desc="Forward your Zillow lead notification emails to Say HelloLeads — no API key needed, just a one-time setting change."
                 link="https://premieragent.zillow.com" linkLabel="Open Zillow Premier Agent →"
               >
                 <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.5rem' }}>
@@ -1055,7 +1055,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
               </IntegCard>
 
               <IntegCard icon="🔑" title="Realtor.com" badge="Email forwarding" status={false}
-                desc="Forward Realtor.com lead alerts to your Say Hello Leads address."
+                desc="Forward Realtor.com lead alerts to your Say HelloLeads address."
                 link="https://realtorpro.realtor.com" linkLabel="Open Realtor.com Pro →"
               >
                 <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '.5rem' }}>
@@ -1206,7 +1206,7 @@ const SETUP_STEPS = [
   {
     title: 'Deploy to Vercel',
     body: `Push to GitHub then import at <a href="https://vercel.com" target="_blank">vercel.com</a>. Vercel auto-detects Next.js.
-<div class="code-block">git init && git add . && git commit -m "Initial Say Hello Leads"
+<div class="code-block">git init && git add . && git commit -m "Initial Say HelloLeads"
 git remote add origin https://github.com/YOUR/sayhelloleads.git
 git push -u origin main</div>`,
   },
@@ -1238,7 +1238,7 @@ git push -u origin main</div>`,
   },
   {
     title: 'Connect your website contact form',
-    body: `Add a shared secret header for security, then POST to your Say Hello Leads endpoint:
+    body: `Add a shared secret header for security, then POST to your Say HelloLeads endpoint:
 <div class="code-block">fetch('https://YOUR-APP.vercel.app/api/new-lead', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'x-webhook-secret': 'YOUR_SECRET' },
