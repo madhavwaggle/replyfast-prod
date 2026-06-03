@@ -1,5 +1,5 @@
 {
-  "name": "replyfast",
+  "name": "say-hello-leads",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -28,5 +28,6 @@
     "@types/react": "^18.3.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.2.0"
-  }
+  },
+  "description": "AI lead response for real estate agents"
 }
