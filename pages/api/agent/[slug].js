@@ -13,9 +13,7 @@ import { getUserByEmail } from '../../../lib/users';
 import { saveLead } from '../../../lib/db';
 import { notifyAgentNewLead } from '../../../lib/notify';
 import { v4 as uuidv4 } from 'uuid';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { getAgentConfig } from '../../../lib/agentConfig';
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -136,8 +134,12 @@ export default async function handler(req, res) {
 // ─── AI RESPONSE TRIGGER ─────────────────────────────────────────────────────
 
 async function triggerAIResponse(lead, agent) {
-  const agentName = agent.name || 'your agent';
-  const agencyName = agent.agencyName || '';
+  const cfg = await getAgentConfig(agent?.id || lead.agentId);
+  const agentName = agent?.name || 'your agent';
+  const agencyName = agent?.agencyName || '';
+  if (!cfg.anthropicKey) { console.warn('No Anthropic key for agent', lead.agentId); return; }
+  const { default: Anthropic } = await import('@anthropic-ai/sdk');
+  const anthropic = new Anthropic({ apiKey: cfg.anthropicKey });
 
   const systemPrompt = `You are a Say Hello Leads AI real estate assistant responding on behalf of ${agentName}${agencyName ? ` at ${agencyName}` : ''}.
 
@@ -180,23 +182,23 @@ A buyer just submitted an inquiry. Respond warmly and personally — reference t
     await saveLead(lead);
 
     // SMS the lead if Twilio configured
-    if (lead.phone && process.env.TWILIO_ACCOUNT_SID) {
+    if (lead.phone && cfg.twilioSid) {
       try {
         const twilio = (await import('twilio')).default;
-        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-        await client.messages.create({ to: lead.phone, from: process.env.TWILIO_PHONE_NUMBER, body: aiReply.slice(0, 1600) });
+        const client = twilio(cfg.twilioSid, cfg.twilioToken);
+        await client.messages.create({ to: lead.phone, from: cfg.twilioPhone, body: aiReply.slice(0, 1600) });
         lead.smsSent = true;
         await saveLead(lead);
       } catch (e) { console.error('SMS error:', e); }
     }
 
     // Email the buyer if Postmark configured
-    if (lead.email && process.env.POSTMARK_SERVER_TOKEN) {
+    if (lead.email && cfg.postmarkToken) {
       try {
         const postmark = await import('postmark');
-        const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+        const client = new postmark.ServerClient(cfg.postmarkToken);
         await client.sendEmail({
-          From: process.env.EMAIL_FROM || `${agentName} via Say Hello Leads <noreply@sayhelloleads.com>`,
+          From: cfg.emailFrom || `${agentName} via Say Hello Leads <noreply@sayhelloleads.com>`,
           To: lead.email,
           Subject: `Re: ${lead.property}`,
           TextBody: aiReply,
@@ -206,8 +208,9 @@ A buyer just submitted an inquiry. Respond warmly and personally — reference t
     }
 
     // Notify the agent
-    if (agent.email) {
-      await notifyAgentNewLead(lead, agent.email, agentName).catch(console.error);
+    const agentEmail = agent?.notifyEmail || agent?.email;
+    if (agentEmail) {
+      await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey).catch(console.error);
     }
   } catch (e) {
     console.error('AI trigger error:', e);
