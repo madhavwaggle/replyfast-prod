@@ -209,7 +209,7 @@ export default function App() {
       setChecklist({
         profile:   !!(p.name && p.notifyEmail),
         anthropic: !!(c.anthropicKey?.isSet),
-        email:     !!(c.resendKey?.isSet || c.postmarkToken?.isSet),
+        email:     !!(c.twilioPhone?.isSet || c.webhookSecret?.isSet || c.postmarkToken?.isSet),
         sms:       !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
       });
     } catch (e) { console.error('loadChecklist:', e); }
@@ -641,7 +641,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
                   {[
                     { done: checklist.profile,   label: 'Complete your profile',          dest: 'profile',       hint: 'Name + notification email' },
                     { done: checklist.anthropic,  label: 'Add your Anthropic API key',     dest: 'integrations',  hint: 'Powers AI responses' },
-                    { done: checklist.email,      label: 'Connect email notifications',    dest: 'integrations',  hint: 'Resend or Postmark' },
+                    { done: checklist.email,      label: 'Connect a lead source',          dest: 'integrations',  hint: 'Zillow, SMS, or website' },
                     { done: checklist.sms,        label: 'Connect Twilio SMS (optional)',  dest: 'integrations',  hint: 'AI responds via text' },
                   ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', cursor: item.done ? 'default' : 'pointer' }}
@@ -772,7 +772,7 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
 
           <div style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Profile</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Your agent details and SMS routing settings.</p>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Your name, agency, and notification preferences.</p>
           </div>
 
           {/* PROFILE CARD */}
@@ -808,23 +808,6 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
             </div>
           </div>
 
-          {/* TWILIO ROUTING CARD */}
-          <div style={{ marginBottom: '2.5rem' }}>
-            <div className="section-label">SMS routing</div>
-            <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.75rem' }}>
-              <p style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '1rem', lineHeight: '1.6' }}>Assign a Twilio phone number to your account. Leads who text this number go to your dashboard only.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '.75rem', alignItems: 'flex-end' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Your Twilio number</label>
-                  <input className="setup-input" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="+15131110001" />
-                </div>
-                <button className="btn-primary" onClick={saveTwilioPhone} disabled={twilioSaving} style={{ opacity: twilioSaving ? .7 : 1, whiteSpace: 'nowrap' }}>{twilioSaving ? 'Saving…' : 'Save number'}</button>
-              </div>
-              {twilioMsg && <div style={{ fontSize: '13px', color: 'var(--sage)', fontWeight: '500', marginTop: '.75rem' }}>{twilioMsg}</div>}
-              {twilioPhone && <div style={{ marginTop: '1rem', background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px', color: 'var(--sage)' }}>✓ Leads texting <strong>{twilioPhone}</strong> route to your dashboard.</div>}
-            </div>
-          </div>
-
           {/* LINK TO INTEGRATIONS */}
           <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
             <div>
@@ -841,45 +824,29 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
         <section className="fade-in" style={{ maxWidth: '720px', margin: '3rem auto', padding: '0 1.5rem 5rem' }}>
           <a className="back-link" onClick={() => setView('profile')}>← Profile</a>
           <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Integrations</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Paste your API keys below. Everything is saved to your account — no Vercel env vars needed.</p>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '2rem', marginBottom: '.25rem' }}>Connect your lead sources</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>AI responses and email alerts are handled by Say Hello Leads — no API keys needed. Just connect where your leads come from.</p>
           </div>
 
-          {/* ── ANTHROPIC ─────────────────────────────────────────────── */}
-          <IntegCard
-            icon="🤖" title="Anthropic AI" required
-            status={creds.anthropicKey?.isSet}
-            desc="Powers all AI lead responses and scoring. Get your key at platform.anthropic.com → API Keys."
-            link="https://platform.anthropic.com/account/api-keys"
-            linkLabel="Get API key →"
-          >
-            <CredField
-              label="Anthropic API Key" field="anthropicKey" placeholder="sk-ant-..."
-              current={creds.anthropicKey} saving={credsSaving.anthropicKey} msg={credsMsg.anthropicKey}
-              onSave={saveCred}
-            />
-          </IntegCard>
+          {/* ── WHAT'S INCLUDED BANNER ───────────────────────────────── */}
+          <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1.1rem 1.35rem', marginBottom: '1.75rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '13px' }}>
+              <div style={{ fontWeight: '600', color: 'var(--sage)', marginBottom: '.4rem' }}>✓ Included in your subscription</div>
+              <div style={{ color: 'var(--black)', display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <span>🤖 AI lead responses</span>
+                <span>📊 Lead scoring</span>
+                <span>🔔 Email alerts to you</span>
+                <span>💾 Lead storage</span>
+              </div>
+            </div>
+          </div>
 
-          {/* ── RESEND (agent notifications) ────────────────────────── */}
+          {/* ── TWILIO SMS ───────────────────────────────────────────── */}
           <IntegCard
-            icon="✉️" title="Resend" badge="Lead alerts"
-            status={creds.resendKey?.isSet}
-            desc="Sends you an email every time a new lead comes in. Free tier: 3,000 emails/mo. Sign up at resend.com."
-            link="https://resend.com" linkLabel="Sign up free →"
-          >
-            <CredField
-              label="Resend API Key" field="resendKey" placeholder="re_..."
-              current={creds.resendKey} saving={credsSaving.resendKey} msg={credsMsg.resendKey}
-              onSave={saveCred}
-            />
-          </IntegCard>
-
-          {/* ── TWILIO ───────────────────────────────────────────────── */}
-          <IntegCard
-            icon="📱" title="Twilio SMS" badge="Optional"
-            status={creds.twilioSid?.isSet && creds.twilioPhone?.isSet}
-            desc={<>AI responds to leads via SMS. Buy a number (~$1/mo) at twilio.com. Set your number&apos;s inbound webhook to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px'}}>https://www.sayhelloleads.com/api/inbound-sms</code></>}
-            link="https://console.twilio.com" linkLabel="Twilio console →"
+            icon="📱" title="SMS — get a Twilio number" badge="Recommended"
+            status={creds.twilioPhone?.isSet}
+            desc={<>Leads can text a real phone number and the AI responds instantly by SMS. Each agent needs their own number (~$1/mo on Twilio).<br/><br/><strong>Steps:</strong><br/>1. Sign up at <a href="https://twilio.com" target="_blank" style={{color:'var(--sage)'}}>twilio.com</a> — free trial includes credit<br/>2. Buy a local number (search your area code)<br/>3. Go to that number → Messaging → Incoming messages webhook → set to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>https://www.sayhelloleads.com/api/inbound-sms</code><br/>4. Paste your credentials below</>}
+            link="https://console.twilio.com" linkLabel="Open Twilio console →"
           >
             <CredField
               label="Account SID" field="twilioSid" placeholder="AC..."
@@ -892,47 +859,98 @@ Respond ONLY as JSON (no markdown): {"score":"HOT","summary":"2-sentence agent b
               onSave={saveCred}
             />
             <CredField
-              label="Your Twilio Phone Number" field="twilioPhone" placeholder="+15131234567"
+              label="Your Twilio phone number" field="twilioPhone" placeholder="+15131234567"
               current={creds.twilioPhone} saving={credsSaving.twilioPhone} msg={credsMsg.twilioPhone}
               onSave={saveCred}
             />
-          </IntegCard>
-
-          {/* ── POSTMARK ─────────────────────────────────────────────── */}
-          <IntegCard
-            icon="📧" title="Postmark" badge="Zillow / Homes.com / Realtor.com"
-            status={creds.postmarkToken?.isSet}
-            desc={<>Receives forwarded lead emails from Zillow, Homes.com, and Realtor.com. Set your Postmark inbound webhook to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px'}}>https://www.sayhelloleads.com/api/inbound-email</code><br/><br/>Then in Zillow Premier Agent → Settings → Lead notifications, forward emails to your unique Postmark inbound address shown after you add your token.</>}
-            link="https://postmarkapp.com" linkLabel="Sign up →"
-          >
-            <CredField
-              label="Postmark Server Token" field="postmarkToken" placeholder="your-server-token"
-              current={creds.postmarkToken} saving={credsSaving.postmarkToken} msg={credsMsg.postmarkToken}
-              onSave={saveCred}
-            />
-            <CredField
-              label="From email (optional)" field="emailFrom" placeholder="Jane Smith <jane@yourrealty.com>"
-              current={creds.emailFrom} saving={credsSaving.emailFrom} msg={credsMsg.emailFrom}
-              onSave={saveCred}
-            />
-            {creds.postmarkToken?.isSet && session?.user?.id && (
-              <div style={{ marginTop: '.75rem', background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px' }}>
-                <strong>Your inbound address:</strong>{' '}
-                <code style={{ fontSize: '12px' }}>{session.user.id}@inbound.postmarkapp.com</code>
-                <div style={{ color: 'var(--muted)', marginTop: '.3rem' }}>Forward your Zillow / Homes.com lead notification emails to this address.</div>
+            {creds.twilioPhone?.isSet && (
+              <div style={{ marginTop: '.75rem', background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px', color: 'var(--sage)' }}>
+                ✓ Leads who text <strong>{creds.twilioPhone.masked}</strong> will get an instant AI reply.
               </div>
             )}
           </IntegCard>
 
-          {/* ── ZAPIER WEBHOOK ───────────────────────────────────────── */}
+          {/* ── ZILLOW ───────────────────────────────────────────────── */}
           <IntegCard
-            icon="⚡" title="Zapier / Webhook" badge="Any source"
-            desc={<>Connect any lead source via Zapier or a direct POST. Use your unique webhook URL below. Optionally protect it with a secret.<br/><br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',wordBreak:'break-all'}}>POST https://www.sayhelloleads.com/api/new-lead</code><br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',marginTop:'4px',display:'inline-block'}}>x-agent-id: {session?.user?.id || 'your-agent-id'}</code></>}
+            icon="🏠" title="Zillow Premier Agent" badge="Email forwarding"
+            status={false}
+            desc={<>Forward your Zillow lead notification emails to Say Hello Leads. No API key needed — just a one-time email setting.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://premieragent.zillow.com" target="_blank" style={{color:'var(--sage)'}}>Zillow Premier Agent</a><br/>2. Go to Settings → Contact preferences → Lead notification email<br/>3. Add your unique forwarding address below as an additional recipient:<br/>{session?.user?.id && <code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'6px',wordBreak:'break-all'}}>{session.user.id}@inbound.postmarkapp.com</code>}<br/><br/>That's it — new Zillow leads will flow into your dashboard automatically.</>}
+          >
+            {session?.user?.id && (
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
+                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
+                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
+                    style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </IntegCard>
+
+          {/* ── HOMES.COM ────────────────────────────────────────────── */}
+          <IntegCard
+            icon="🏡" title="Homes.com" badge="Email forwarding"
+            status={false}
+            desc={<>Same process as Zillow — forward lead emails to your unique address.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://homes.com" target="_blank" style={{color:'var(--sage)'}}>Homes.com</a> agent portal<br/>2. Account Settings → Notifications → Lead notification email<br/>3. Add your forwarding address as an additional recipient</>}
+          >
+            {session?.user?.id && (
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
+                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
+                    style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </IntegCard>
+
+          {/* ── REALTOR.COM ──────────────────────────────────────────── */}
+          <IntegCard
+            icon="🔑" title="Realtor.com" badge="Email forwarding"
+            status={false}
+            desc={<>Forward Realtor.com lead alerts to your Say Hello Leads address.<br/><br/><strong>Steps:</strong><br/>1. Log into <a href="https://realtorpro.realtor.com" target="_blank" style={{color:'var(--sage)'}}>Realtor.com Pro</a><br/>2. My Account → Notifications → Email for new leads<br/>3. Add your forwarding address as an additional notification email</>}
+          >
+            {session?.user?.id && (
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                  <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all' }}>{session.user.id}@inbound.postmarkapp.com</code>
+                  <button onClick={() => navigator.clipboard.writeText(`${session.user.id}@inbound.postmarkapp.com`)}
+                    style={{ fontSize: '12px', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </IntegCard>
+
+          {/* ── WEBSITE / ZAPIER ─────────────────────────────────────── */}
+          <IntegCard
+            icon="⚡" title="Your website or Zapier" badge="Any source"
+            desc={<>Already have a contact form on your website, or use another CRM? Send leads straight to your dashboard via a simple webhook.<br/><br/><strong>Webhook URL:</strong><br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'4px',wordBreak:'break-all'}}>POST https://www.sayhelloleads.com/api/new-lead</code><br/><br/>Include this header so leads route to your account:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'3px 8px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>x-agent-id: {session?.user?.id || 'your-agent-id'}</code><br/><br/>Body fields: <code style={{fontSize:'11px'}}>fname, lname, email, phone, property, message, source</code></>}
             link="https://zapier.com" linkLabel="Open Zapier →"
           >
             <CredField
-              label="Webhook secret (optional)" field="webhookSecret" placeholder="any random string"
+              label="Webhook secret (optional — adds security)" field="webhookSecret" placeholder="any random string"
               current={creds.webhookSecret} saving={credsSaving.webhookSecret} msg={credsMsg.webhookSecret}
+              onSave={saveCred}
+            />
+          </IntegCard>
+
+          {/* ── CUSTOM SEND-FROM EMAIL ───────────────────────────────── */}
+          <IntegCard
+            icon="✍️" title="Custom send-from email" badge="Optional"
+            desc="By default AI replies come from noreply@sayhelloleads.com. Enter your name and email below to personalise what leads see in their inbox."
+          >
+            <CredField
+              label="From name & email" field="emailFrom" placeholder="Jane Smith <jane@hydeparkrealty.com>"
+              current={creds.emailFrom} saving={credsSaving.emailFrom} msg={credsMsg.emailFrom}
               onSave={saveCred}
             />
           </IntegCard>
