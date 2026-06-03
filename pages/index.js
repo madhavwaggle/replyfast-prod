@@ -508,7 +508,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             </div>
 
             <div className="section-label">The solution</div>
-            <div className="section-title">Say Hello AI works while you don't.</div>
+            <div className="section-title">Say Hello AI works while you sleep.</div>
             <div className="steps">
               {[
                 ['1', 'Lead comes in — any source', 'Zillow, Homes.com, Realtor.com, a text, or your website. Any time, day or night.'],
@@ -576,9 +576,9 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             <div className="section-label">What agents say</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
               {[
-                ['"I used to lose leads every weekend. Now they get a response in under a minute — whether I'm showing a home or at my kid's soccer game."', 'Maria C.', 'Keller Williams, Cincinnati'],
-                ['"My Zillow spend was $600/mo and I was missing half the leads. In the first week using this I booked 3 showings from leads I would have lost."', 'James T.', 'RE/MAX, Columbus'],
-                ['"The AI sounds more professional than my usual texts. Leads actually think they're talking to my assistant. That's exactly what I wanted."', 'Priya S.', 'Independent Agent, Dayton'],
+                ["“I used to lose leads every weekend. Now they get a response in under a minute — whether I’m showing a home or at my kid’s soccer game.”", 'Maria C.', 'Keller Williams, Cincinnati'],
+                ["“My Zillow spend was $600/mo and I was missing half the leads. In the first week using this I booked 3 showings from leads I would have lost.”", 'James T.', 'RE/MAX, Columbus'],
+                ["“The AI sounds more professional than my usual texts. Leads actually think they’re talking to my assistant. That’s exactly what I wanted.”", 'Priya S.', 'Independent Agent, Dayton'],
               ].map(([quote, name, title]) => (
                 <div key={name} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.5rem' }}>
                   <div style={{ fontSize: '13px', color: 'var(--black)', lineHeight: '1.7', marginBottom: '1rem', fontStyle: 'italic' }}>{quote}</div>
