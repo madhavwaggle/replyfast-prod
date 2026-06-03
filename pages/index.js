@@ -49,9 +49,6 @@ export default function App() {
   const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
-  const [twilioPhone, setTwilioPhone] = useState('');
-  const [twilioSaving, setTwilioSaving] = useState(false);
-  const [twilioMsg, setTwilioMsg] = useState('');
   // Integration credentials
   const [creds, setCreds]           = useState({});
   const [credsLoaded, setCredsLoaded] = useState(false);
@@ -138,16 +135,6 @@ export default function App() {
     } catch (e) { console.error('loadProfile error:', e); }
   }
 
-  async function saveTwilioPhone() {
-    setTwilioSaving(true); setTwilioMsg('');
-    try {
-      const res = await fetch('/api/phone-route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: twilioPhone.trim() || null }) });
-      const data = await res.json();
-      setTwilioMsg(res.ok ? '✓ Number saved' : (data.error || 'Save failed'));
-    } catch { setTwilioMsg('Save failed'); }
-    setTwilioSaving(false);
-    setTimeout(() => setTwilioMsg(''), 3000);
-  }
 
   async function saveProfile() {
     setProfileSaving(true);
