@@ -17,6 +17,7 @@ export default function AgentPage({ agent, notFound }) {
   const [input, setInput]       = useState('');
   const [sending, setSending]   = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [error, setError]       = useState('');
   const chatRef  = useRef(null);
   const inputRef = useRef(null);
@@ -29,30 +30,54 @@ export default function AgentPage({ agent, notFound }) {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, sending]);
 
+  // Human-like typing delay: ~1s base + 20ms per char, capped at 4s
+  function typingDelay(text) {
+    return Math.min(1000 + (text?.length || 0) * 20, 4000);
+  }
+
   async function startChat() {
     if (!form.fname || !form.email) { setError('Please enter your name and email.'); return; }
     setSubmitting(true); setError('');
     try {
       const userMessage = form.message.trim() || `Hi ${agentFirst}, I'm interested in ${form.property || 'a property'}.`;
-      const res = await fetch(`/api/agent/${agent.slug}`, {
+
+      // Fire the API call immediately in background
+      const fetchPromise = fetch(`/api/agent/${agent.slug}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, message: userMessage }),
       });
+
+      // Show connecting screen while API runs
+      setSubmitting(false);
+      setConnecting(true);
+
+      // Step 1: "Connecting you with [agent]..." — 1.5s
+      await new Promise(r => setTimeout(r, 1500));
+
+      const res  = await fetchPromise;
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
       setLeadId(data.id);
       const firstReply = data.firstReply || `Hi ${form.fname}! Thanks for reaching out — what's your timeline for moving?`;
-      setMessages([
-        { role: 'lead', name: `${form.fname} ${form.lname}`.trim(), text: userMessage },
-        { role: 'ai',   name: agentName, text: firstReply },
-      ]);
+
+      // Step 2: Show buyer message, transition to chat with typing indicator
+      setConnecting(false);
+      setMessages([{ role: 'lead', name: `${form.fname} ${form.lname}`.trim(), text: userMessage }]);
       setStep('chat');
-      setTimeout(() => inputRef.current?.focus(), 300);
+      setSending(true);
+
+      // Step 3: Delay before agent reply scales with reply length
+      await new Promise(r => setTimeout(r, typingDelay(firstReply)));
+      setSending(false);
+      setMessages(m => [...m, { role: 'ai', name: agentName, text: firstReply }]);
+
+      setTimeout(() => inputRef.current?.focus(), 100);
     } catch (e) {
-      setError(e.message);
-    } finally {
+      setConnecting(false);
       setSubmitting(false);
+      setError(e.message);
     }
   }
 
@@ -70,7 +95,8 @@ export default function AgentPage({ agent, notFound }) {
       });
       const data = await res.json();
       if (data.reply) {
-        await new Promise(r => setTimeout(r, 700));
+        // Scale delay to reply length — feels like someone actually typing
+        await new Promise(r => setTimeout(r, typingDelay(data.reply)));
         setMessages(m => [...m, { role: 'ai', name: agentName, text: data.reply }]);
       }
     } catch {
