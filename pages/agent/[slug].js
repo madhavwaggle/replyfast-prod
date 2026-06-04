@@ -205,41 +205,30 @@ export default function AgentPage({ agent, notFound }) {
         @keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         @keyframes blink { 0%,80%,100% { opacity: .3; } 40% { opacity: 1; } }
 
-        /* ── Google Places autocomplete dropdown fix ── */
+        /* ── Google Places dropdown ── */
         .pac-container {
-          border-radius: 10px;
-          border: 1.5px solid var(--border);
-          box-shadow: 0 4px 16px rgba(0,0,0,.10);
-          font-family: 'DM Sans', sans-serif;
-          margin-top: 4px;
-          z-index: 10000;
+          background: #ffffff !important;
+          border: 1.5px solid #e5e7eb !important;
+          border-radius: 10px !important;
+          box-shadow: 0 8px 24px rgba(0,0,0,.12) !important;
+          font-family: 'DM Sans', sans-serif !important;
+          margin-top: 4px !important;
+          z-index: 99999 !important;
+          overflow: hidden;
         }
         .pac-item {
-          padding: .6rem .9rem;
-          font-size: 13px;
-          cursor: pointer;
-          border-top: 1px solid var(--border);
-          display: flex;
-          align-items: center;
-          gap: .5rem;
-          line-height: 1.4;
+          background: #ffffff;
+          padding: .6rem .9rem !important;
+          font-size: 13px !important;
+          cursor: pointer !important;
+          border-top: 1px solid #e5e7eb !important;
+          line-height: 1.5 !important;
         }
-        .pac-item:first-child { border-top: none; }
-        .pac-item:hover { background: var(--sage-light); }
-        .pac-item-query {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--black);
-          padding-right: 4px;
-        }
-        .pac-matched { font-weight: 700; }
-        .pac-icon { display: none; }
-        .pac-logo:after { display: none; }
-        .pac-container:after { 
-          background-image: none !important;
-          height: 0;
-          padding: 0;
-        }
+        .pac-item:hover, .pac-item:focus { background: #eef4f0 !important; }
+        .pac-item-query { font-size: 13px !important; font-weight: 600 !important; color: #111 !important; }
+        .pac-matched { font-weight: 700 !important; }
+        .pac-icon { display: none !important; }
+        .pac-item .pac-item-query + span { color: #6b7280; margin-left: 4px; }
       `}</style>
 
       {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
@@ -281,7 +270,7 @@ export default function AgentPage({ agent, notFound }) {
               <label>Phone <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
               <input type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" />
             </div>
-            <div className="field" style={{ position: 'relative', zIndex: 100 }}>
+            <div className="field">
               <label>Property you're interested in</label>
               <AddressAutocomplete
                 value={form.property}
@@ -289,7 +278,6 @@ export default function AgentPage({ agent, notFound }) {
                 placeholder="e.g. 412 Elm St, 3BR in Hyde Park, or just the area"
               />
             </div>
-            <div style={{ position: 'relative', zIndex: 1 }}>
             <div className="field">
               <label>Your message</label>
               <textarea
@@ -318,7 +306,6 @@ export default function AgentPage({ agent, notFound }) {
             <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.65rem' }}>
               Your info is only shared with {agentName}. No spam, ever.
             </p>
-            </div>{/* end z-index wrapper */}
           </div>
         )}
 
