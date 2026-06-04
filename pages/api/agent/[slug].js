@@ -167,11 +167,14 @@ async function runAI(lead, agent) {
   });
 
   const scored = parseScoreResponse(scoreResp.content?.[0]?.text);
-  lead.score      = scored.score;
-  lead.confidence = scored.confidence;
-  lead.signals    = scored.signals;   // { timeline, budget, preApproved, alsoSelling, motivation, urgencyLevel }
-  lead.summary    = scored.summary || `${lead.fname} inquired about ${lead.property}.`;
-  lead.nextAction = scored.nextAction || 'Follow up to schedule a showing.';
+  lead.score              = scored.score;
+  lead.confidence         = scored.confidence;
+  lead.signals            = scored.signals;
+  lead.summary            = scored.summary || `${lead.fname} inquired about ${lead.property}.`;
+  lead.nextAction         = scored.nextAction || 'Follow up to schedule a showing.';
+  // New fields from updated scoring prompt
+  if (scored.signals?.triggerWords)       lead.triggerWords = scored.signals.triggerWords;
+  if (scored.signals?.responseEngagement) lead.responseEngagement = scored.signals.responseEngagement;
 
   // ── 3. Save with full scoring data ───────────────────────────────────────
   await saveLead(lead);
