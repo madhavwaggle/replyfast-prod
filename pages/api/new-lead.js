@@ -10,6 +10,7 @@ import { getUserById } from '../../lib/users';
 import { notifyAgentNewLead } from '../../lib/notify';
 import { getAgentConfig } from '../../lib/agentConfig';
 import { buildFirstResponsePrompt, buildScoringPrompt, parseScoreResponse } from '../../lib/aiPrompts';
+import { processReply, fallbackReply, validateScore } from '../../lib/guardrails';
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -61,7 +62,7 @@ export async function triggerAIResponse(lead, agent, cfg) {
   if (!cfg) cfg = await getAgentConfig(lead.agentId);
   if (!cfg.anthropicKey) {
     console.warn('No Anthropic key for agent', lead.agentId);
-    lead.score = 'WARM';
+    lead.score   = 'WARM';
     lead.summary = `${lead.fname} inquired about ${lead.property}. Follow up to schedule a showing.`;
     await saveLead(lead);
     return;
@@ -72,48 +73,64 @@ export async function triggerAIResponse(lead, agent, cfg) {
   const anthropic  = new Anthropic({ apiKey: cfg.anthropicKey });
 
   try {
-    // ── 1. First response using shared prompt ──────────────────────────────
+    // ── 1. First response ──────────────────────────────────────────────────
     const replyPrompt = buildFirstResponsePrompt({ agentName, agencyName, lead });
     const replyResp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model:      'claude-sonnet-4-20250514',
       max_tokens: 250,
-      system: replyPrompt.system,
-      messages: replyPrompt.messages,
+      system:     replyPrompt.system,
+      messages:   replyPrompt.messages,
     });
 
-    const aiReply = replyResp.content?.[0]?.text?.trim() || '';
-    if (aiReply) {
-      lead.messages.push({ role: 'ai', text: aiReply });
+    const rawReply = replyResp.content?.[0]?.text || '';
+    const { text: aiReply, safe, flags } = processReply(rawReply);
+
+    if (flags.length > 0) {
+      console.warn(`[guardrails] new-lead reply flags for lead ${lead.id}:`, flags);
+    }
+
+    const finalReply = safe ? aiReply : fallbackReply(agentName);
+    if (!safe) {
+      console.warn(`[guardrails] new-lead reply FAILED for lead ${lead.id} — using fallback. Flags:`, flags);
+    }
+
+    if (finalReply) {
+      lead.messages.push({ role: 'ai', text: finalReply });
       lead.updatedAt = new Date().toISOString();
     }
 
-    // ── 2. Score using shared prompt ───────────────────────────────────────
+    // ── 2. Score ───────────────────────────────────────────────────────────
     const scorePrompt = buildScoringPrompt({ lead });
     const scoreResp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: scorePrompt.system,
-      messages: scorePrompt.messages,
+      model:      'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system:     scorePrompt.system,
+      messages:   scorePrompt.messages,
     });
 
     const scored = parseScoreResponse(scoreResp.content?.[0]?.text);
-    lead.score              = scored.score;
-    lead.confidence         = scored.confidence;
-    lead.signals            = scored.signals;
-    lead.summary            = scored.summary || `${lead.fname} inquired about ${lead.property}.`;
-    lead.nextAction         = scored.nextAction || 'Follow up to schedule a showing.';
-    // New fields from updated scoring prompt
-    if (scored.signals?.triggerWords)       lead.triggerWords = scored.signals.triggerWords;
-    if (scored.signals?.responseEngagement) lead.responseEngagement = scored.signals.responseEngagement;
+    if (validateScore(scored)) {
+      lead.score              = scored.score;
+      lead.confidence         = scored.confidence;
+      lead.signals            = scored.signals;
+      lead.summary            = scored.summary || `${lead.fname} inquired about ${lead.property}.`;
+      lead.nextAction         = scored.nextAction || 'Follow up to schedule a showing.';
+      if (scored.signals?.triggerWords)       lead.triggerWords       = scored.signals.triggerWords;
+      if (scored.signals?.responseEngagement) lead.responseEngagement = scored.signals.responseEngagement;
+    } else {
+      console.warn(`[guardrails] invalid score for lead ${lead.id} — using defaults`);
+      lead.score   = 'WARM';
+      lead.summary = `${lead.fname} inquired about ${lead.property}. Follow up needed.`;
+    }
 
     await saveLead(lead);
 
     // ── 3. SMS lead if Twilio connected ────────────────────────────────────
-    if (aiReply && lead.phone && cfg.twilioSid && cfg.twilioPhone) {
+    if (finalReply && lead.phone && cfg.twilioSid && cfg.twilioPhone) {
       try {
         const twilio = (await import('twilio')).default;
         await twilio(cfg.twilioSid, cfg.twilioToken).messages.create({
-          to: lead.phone, from: cfg.twilioPhone, body: aiReply.slice(0, 1600),
+          to: lead.phone, from: cfg.twilioPhone, body: finalReply.slice(0, 1600),
         });
         lead.smsSent = true;
         await saveLead(lead);
@@ -121,15 +138,15 @@ export async function triggerAIResponse(lead, agent, cfg) {
     }
 
     // ── 4. Email lead if Postmark connected ────────────────────────────────
-    if (aiReply && lead.email && cfg.postmarkToken) {
+    if (finalReply && lead.email && cfg.postmarkToken) {
       try {
         const { ServerClient } = await import('postmark');
         await new ServerClient(cfg.postmarkToken).sendEmail({
           From:     cfg.emailFrom || `${agentName} <noreply@sayhelloleads.com>`,
           To:       lead.email,
           Subject:  `Re: ${lead.property}`,
-          TextBody: aiReply,
-          HtmlBody: `<div style="font-family:sans-serif;max-width:600px;padding:1.5rem;line-height:1.6;">${aiReply.replace(/\n/g, '<br>')}</div>`,
+          TextBody: finalReply,
+          HtmlBody: `<div style="font-family:sans-serif;max-width:600px;padding:1.5rem;line-height:1.6;">${finalReply.replace(/\n/g, '<br>')}</div>`,
         });
       } catch (e) { console.error('Postmark error:', e.message); }
     }
