@@ -212,7 +212,7 @@ export default function AgentPage({ agent, notFound }) {
           box-shadow: 0 4px 16px rgba(0,0,0,.10);
           font-family: 'DM Sans', sans-serif;
           margin-top: 4px;
-          z-index: 9999;
+          z-index: 10000;
         }
         .pac-item {
           padding: .6rem .9rem;
@@ -281,7 +281,7 @@ export default function AgentPage({ agent, notFound }) {
               <label>Phone <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
               <input type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" />
             </div>
-            <div className="field">
+            <div className="field" style={{ position: 'relative', zIndex: 100 }}>
               <label>Property you're interested in</label>
               <AddressAutocomplete
                 value={form.property}
@@ -289,6 +289,7 @@ export default function AgentPage({ agent, notFound }) {
                 placeholder="e.g. 412 Elm St, 3BR in Hyde Park, or just the area"
               />
             </div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
             <div className="field">
               <label>Your message</label>
               <textarea
@@ -317,6 +318,7 @@ export default function AgentPage({ agent, notFound }) {
             <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.65rem' }}>
               Your info is only shared with {agentName}. No spam, ever.
             </p>
+            </div>{/* end z-index wrapper */}
           </div>
         )}
 
