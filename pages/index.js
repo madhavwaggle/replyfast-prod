@@ -52,6 +52,7 @@ export default function App() {
     return Math.min(1000 + (text?.length || 0) * 20, 4000);
   }
   const [scoring, setScoring] = useState(false);
+  const [demoLead, setDemoLead] = useState(null);
   const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
@@ -363,7 +364,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
   }
 
   async function goToDashboard() {
-    if (!currentLead) { setView('dashboard'); return; }
+    if (!currentLead) { setView(session ? 'dashboard' : 'demo-dashboard'); return; }
     setScoring(true);
 
     const convo = (currentLead.messages || []).map(m => (m.role === 'ai' ? 'Assistant' : 'Lead') + ': ' + m.text).join('\n');
@@ -390,9 +391,17 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
       currentLead.nextAction = 'Follow up to qualify.';
     }
 
-    await callAPI('/api/leads', { ...currentLead, updatedAt: new Date().toISOString() });
-    setScoring(false);
-    setView('dashboard');
+    if (session) {
+      // Logged in — save to DB and go to real dashboard
+      await callAPI('/api/leads', { ...currentLead, updatedAt: new Date().toISOString() });
+      setScoring(false);
+      setView('dashboard');
+    } else {
+      // Not logged in — show demo dashboard with scored lead
+      setDemoLead({ ...currentLead, updatedAt: new Date().toISOString() });
+      setScoring(false);
+      setView('demo-dashboard');
+    }
   }
 
   function continueConvo(lead) {
@@ -768,14 +777,180 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           ) : (
             <button
               className="go-dashboard-btn"
-              onClick={() => router.push('/register')}
+              onClick={goToDashboard}
+              disabled={scoring}
               style={{ background: 'var(--sage)' }}
             >
-              💾 Save this lead — create a free account →
+              {scoring ? 'Scoring your lead…' : '💾 Save this lead — see it in your dashboard →'}
             </button>
           )}
         </section>
       )}
+
+      {/* ── DEMO DASHBOARD ─────────────────────────────────────────────────── */}
+      {view === 'demo-dashboard' && demoLead && (() => {
+        const lead = demoLead;
+        const scoreColors = { HOT: 'score-hot', WARM: 'score-warm', COLD: 'score-cold' };
+        return (
+          <section className="fade-in">
+            {/* Sticky CTA banner */}
+            <div style={{ background: 'var(--sage)', color: '#fff', padding: '.85rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem', position: 'sticky', top: 0, zIndex: 50 }}>
+              <div>
+                <span style={{ fontWeight: '600', fontSize: '14px' }}>You're viewing a demo dashboard</span>
+                <span style={{ fontSize: '13px', opacity: .85, marginLeft: '.75rem' }}>Your real leads will appear here once you sign up.</span>
+              </div>
+              <button
+                onClick={() => router.push('/register')}
+                style={{ background: '#fff', color: 'var(--sage)', border: 'none', borderRadius: '8px', padding: '.5rem 1.25rem', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                Create free account →
+              </button>
+            </div>
+
+            <div className="dash-nav">
+              <h2>Agent dashboard <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--muted)', marginLeft: '.5rem' }}>— demo preview</span></h2>
+              <div className="dash-nav-right">
+                <div className="live-badge"><div className="live-dot" /> Live</div>
+                {/* Blurred locked buttons */}
+                <div style={{ filter: 'blur(2px)', pointerEvents: 'none', opacity: .5 }}>
+                  <button className="btn-outline" style={{ fontSize: '13px', padding: '.4rem 1rem' }}>Profile &amp; setup</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="dash-body">
+
+              {/* KPI cards — real response time, demo counts */}
+              <div className="dash-kpis">
+                <div className="kpi highlight"><div className="kpi-label">response time</div><div className="kpi-val">&lt;60s</div><div className="kpi-sub">vs 15hr industry avg</div></div>
+                <div className="kpi"><div className="kpi-label">total leads</div><div className="kpi-val">1</div><div className="kpi-sub">demo lead</div></div>
+                <div className="kpi"><div className="kpi-label">hot leads</div><div className="kpi-val">{lead.score === 'HOT' ? 1 : 0}</div><div className="kpi-sub">need follow-up now</div></div>
+                <div className="kpi"><div className="kpi-label">handled</div><div className="kpi-val">100%</div><div className="kpi-sub">first response</div></div>
+              </div>
+
+              {/* Blurred shareable link — shows concept */}
+              <div style={{ position: 'relative', marginBottom: '2rem' }}>
+                <div style={{ filter: 'blur(4px)', pointerEvents: 'none', background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1rem 1.25rem' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.2rem' }}>Your public inquiry page</div>
+                  <div style={{ fontSize: '14px', fontFamily: 'monospace' }}>https://sayhelloleads.com/agent/your-name</div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '.2rem' }}>Share this link — buyers fill out the form and leads come straight to you.</div>
+                </div>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'rgba(249,250,251,.7)' }}>
+                  <button onClick={() => router.push('/register')} style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.55rem 1.25rem', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                    🔓 Sign up to get your link
+                  </button>
+                </div>
+              </div>
+
+              {/* Lead section title */}
+              <div className="dash-section-title" style={{ marginBottom: '.75rem' }}>Active leads</div>
+
+              {/* The actual demo lead — fully visible, scored */}
+              <div className="lead-cards">
+                <div className={`lead-card ${lead.score === 'HOT' ? 'hot-lead' : 'new-lead'}`}
+                  onClick={() => setOpenDetailId(openDetailId === lead.id ? null : lead.id)}>
+                  <div className="lead-avatar">{(lead.fname?.[0] || '') + (lead.lname?.[0] || '')}</div>
+                  <div className="lead-main">
+                    <div className="lead-name">{lead.fname} {lead.lname}</div>
+                    <div className="lead-preview">{(lead.summary || lead.messages?.slice(-1)[0]?.text || '').slice(0, 100)}</div>
+                    <div className="lead-meta">
+                      <span className={`score-badge ${scoreColors[lead.score] || 'score-warm'}`}>{lead.score || 'WARM'}</span>
+                      <span>{lead.source}</span>
+                      <span>{lead.property}</span>
+                      <span className="lead-time">Just now</span>
+                    </div>
+                  </div>
+                </div>
+
+                {openDetailId === lead.id && (
+                  <div className="lead-detail-panel open">
+                    {lead.summary && <div className="detail-summary"><strong>AI brief:</strong> {lead.summary}</div>}
+
+                    {lead.nextAction && (
+                      <div style={{ background: lead.score === 'HOT' ? '#fde8e8' : 'var(--sage-light)', border: '1px solid ' + (lead.score === 'HOT' ? '#f5c6c6' : 'var(--sage-mid)'), borderRadius: '10px', padding: '.75rem 1rem', marginBottom: '1rem', fontSize: '13px' }}>
+                        <span style={{ fontWeight: '600', color: lead.score === 'HOT' ? '#c0392b' : 'var(--sage)' }}>{lead.score === 'HOT' ? '🔥 Next: ' : '→ Next: '}</span>
+                        {lead.nextAction}
+                      </div>
+                    )}
+
+                    {lead.signals && Object.keys(lead.signals || {}).length > 0 && (
+                      <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                        {lead.signals.timeline && lead.signals.timeline !== 'unknown' && <span style={{ background: '#e8f4fd', color: '#2471a3', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px', fontWeight: '500' }}>📅 {lead.signals.timeline}</span>}
+                        {lead.signals.budget && lead.signals.budget !== 'unknown' && <span style={{ background: '#e8f4fd', color: '#2471a3', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px', fontWeight: '500' }}>💰 {lead.signals.budget}</span>}
+                        {lead.signals.preApproved === true && <span style={{ background: '#e8f8ee', color: '#1e8449', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px', fontWeight: '500' }}>✓ Pre-approved</span>}
+                        {lead.signals.preApproved === false && <span style={{ background: '#fde8e8', color: '#c0392b', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px', fontWeight: '500' }}>✗ Not pre-approved</span>}
+                        {lead.signals.alsoSelling === true && <span style={{ background: '#fef9e7', color: '#d68910', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px', fontWeight: '500' }}>🏠 Also selling</span>}
+                        {lead.signals.motivation && lead.signals.motivation !== 'unknown' && <span style={{ background: 'var(--cream)', color: 'var(--muted)', borderRadius: '20px', padding: '.2rem .7rem', fontSize: '12px' }}>📌 {lead.signals.motivation}</span>}
+                      </div>
+                    )}
+
+                    <div className="detail-tags">
+                      {lead.email && <span className="pill">{lead.email}</span>}
+                      {lead.phone && <span className="pill">{lead.phone}</span>}
+                      <span className="pill amber">{lead.property}</span>
+                      <span className="pill">{lead.source}</span>
+                    </div>
+
+                    {/* Conversation preview */}
+                    <div style={{ marginTop: '1rem' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.75rem' }}>Conversation</div>
+                      <div className="chat-window" style={{ maxHeight: '220px' }}>
+                        {lead.messages.map((m, i) => (
+                          <div key={i} className={`msg ${m.role === 'ai' ? 'ai' : 'lead'}`}>
+                            <div className="msg-label">{m.role === 'ai' ? 'Agent' : `${lead.fname} ${lead.lname}`}</div>
+                            {m.text}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* CTA inside lead detail */}
+                    <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'var(--sage-light)', borderRadius: '10px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '.4rem' }}>Ready to work real leads like this?</div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '.85rem' }}>Sign up free — your first real lead could be waiting.</div>
+                      <button onClick={() => router.push('/register')} style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.65rem 1.5rem', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                        Create free account →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Blurred additional leads — shows what more would look like */}
+              <div style={{ position: 'relative', marginTop: '.75rem' }}>
+                <div style={{ filter: 'blur(5px)', pointerEvents: 'none' }}>
+                  {[
+                    { initials: 'TK', name: 'Tom Kim', summary: 'Interested in 2BR condo downtown. Pre-approved at $320k.', score: 'HOT', source: 'Zillow', property: '320 Oak Ave' },
+                    { initials: 'SR', name: 'Sarah R.', summary: 'Browsing 3BR homes in the suburbs. No timeline yet.', score: 'WARM', source: 'Homes.com', property: 'Hyde Park area' },
+                  ].map((l, i) => (
+                    <div key={i} className={`lead-card ${l.score === 'HOT' ? 'hot-lead' : 'new-lead'}`} style={{ marginBottom: '.75rem' }}>
+                      <div className="lead-avatar">{l.initials}</div>
+                      <div className="lead-main">
+                        <div className="lead-name">{l.name}</div>
+                        <div className="lead-preview">{l.summary}</div>
+                        <div className="lead-meta">
+                          <span className={`score-badge ${l.score === 'HOT' ? 'score-hot' : 'score-warm'}`}>{l.score}</span>
+                          <span>{l.source}</span>
+                          <span>{l.property}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '14px', background: 'rgba(249,250,251,.6)' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '.5rem' }}>More leads coming in all the time</div>
+                    <button onClick={() => router.push('/register')} style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.6rem 1.5rem', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+                      Sign up to see them all →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        );
+      })()}
 
       {/* DASHBOARD */}
       {view === 'dashboard' && (
