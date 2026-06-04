@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   const prompt = buildConversationPrompt({ agentName, lead, conversationHistory });
   const resp = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 200,
+    max_tokens: 250,
     system: prompt.system,
     messages: prompt.messages,
   }).catch(() => null);
@@ -53,26 +53,29 @@ export default async function handler(req, res) {
   const reply = resp?.content?.[0]?.text?.trim() || "Got it! I'll follow up with you shortly.";
   lead.messages.push({ role: 'ai', text: reply });
 
-  // Re-score every 2 buyer messages (messages 3, 5, 7...)
+  // Score on first message, then re-score every 2 after that
   const buyerMessageCount = lead.messages.filter(m => m.role === 'lead').length;
-  if (buyerMessageCount >= 2 && buyerMessageCount % 2 === 0) {
+  if (buyerMessageCount === 1 || (buyerMessageCount >= 2 && buyerMessageCount % 2 === 0)) {
     try {
       const scorePrompt = buildScoringPrompt({ lead });
       const scoreResp = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
+        max_tokens: 500,
         system: scorePrompt.system,
         messages: scorePrompt.messages,
       });
       const scored = parseScoreResponse(scoreResp.content?.[0]?.text);
-      lead.score      = scored.score;
-      lead.confidence = scored.confidence;
-      lead.signals    = scored.signals;
-      lead.summary    = scored.summary || lead.summary;
-      lead.nextAction = scored.nextAction || lead.nextAction;
+      lead.score              = scored.score;
+      lead.confidence         = scored.confidence;
+      lead.signals            = scored.signals;
+      lead.summary            = scored.summary || lead.summary;
+      lead.nextAction         = scored.nextAction || lead.nextAction;
+      // New fields from updated scoring prompt
+      if (scored.signals?.triggerWords)         lead.triggerWords = scored.signals.triggerWords;
+      if (scored.signals?.responseEngagement)   lead.responseEngagement = scored.signals.responseEngagement;
 
-      // Notify agent when score changes to HOT, or on 2nd message exchange
-      if (buyerMessageCount === 2 || scored.score === 'HOT') {
+      // Notify on first message, again if score becomes HOT
+      if (buyerMessageCount === 1 || scored.score === 'HOT') {
         const agentEmail = agent?.notifyEmail || agent?.email;
         if (agentEmail) {
           await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
