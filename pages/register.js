@@ -98,6 +98,13 @@ export default function RegisterPage() {
             {error && (
               <div style={{ background: '#fde8e8', border: '1px solid #f5c6c6', borderRadius: '8px', padding: '.65rem .9rem', fontSize: '13px', color: 'var(--red)', marginBottom: '1rem' }}>
                 {error}
+                {error.toLowerCase().includes('already exists') && (
+                  <div style={{ marginTop: '.5rem', paddingTop: '.5rem', borderTop: '1px solid #f5c6c6' }}>
+                    <a href={`/login?email=${encodeURIComponent(form.email)}`} style={{ color: 'var(--red)', fontWeight: 600, textDecoration: 'underline' }}>
+                      Sign in to your existing account →
+                    </a>
+                  </div>
+                )}
               </div>
             )}
 
