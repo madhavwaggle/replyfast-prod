@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const payload = req.body;
+  const payload   = req.body;
   const toEmail   = payload?.To || payload?.ToFull?.[0]?.Email || '';
   const fromEmail = payload?.From || payload?.FromFull?.Email || '';
   const subject   = payload?.Subject || '';
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
   await saveLead(lead);
 
-  // Await AI + scoring so notification includes score (25s timeout)
+  // triggerAIResponse handles all AI reply, guardrails, scoring, and SMS/email
   try {
     await Promise.race([
       triggerAIResponse(lead, agent, cfg),
@@ -71,12 +71,25 @@ export default async function handler(req, res) {
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
 function extractAgentId(toAddress) {
-  // Format: <agentId>@inbound.postmarkapp.com  OR  inbound+<agentId>@sayhelloleads.com
   const m1 = toAddress.match(/^([a-f0-9-]{36})@/i);
   if (m1) return m1[1];
   const m2 = toAddress.match(/inbound\+([^@]+)@/i);
   if (m2) return m2[1];
   return null;
+}
+
+/**
+ * Strip characters that could be used for prompt injection from parsed strings.
+ * Lead emails are untrusted input — names, property addresses, etc. are embedded
+ * directly into AI prompts, so we sanitize before they get there.
+ */
+function sanitizeField(str, maxLen = 120) {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/[`<>]/g, '')           // strip prompt-injection chars
+    .replace(/\n|\r/g, ' ')          // collapse newlines
+    .trim()
+    .slice(0, maxLen);
 }
 
 function parseLeadEmail(fromEmail, subject, body, agentId) {
@@ -89,15 +102,13 @@ function parseLeadEmail(fromEmail, subject, body, agentId) {
 
   // Detect source from sender or subject
   const combined = (fromEmail + ' ' + subject + ' ' + body).toLowerCase();
-  if (combined.includes('zillow'))       lead.source = 'Zillow';
+  if (combined.includes('zillow'))           lead.source = 'Zillow';
   else if (combined.includes('homes.com'))   lead.source = 'Homes.com';
   else if (combined.includes('realtor.com')) lead.source = 'Realtor.com';
   else if (combined.includes('redfin'))      lead.source = 'Redfin';
   else if (combined.includes('trulia'))      lead.source = 'Trulia';
 
-  // ── Name ────────────────────────────────────────────────────────────────
-  // Zillow:    "John Smith is interested in…"
-  // Homes.com: "Name: John Smith"
+  // ── Name ──────────────────────────────────────────────────────────────────
   const namePatterns = [
     /(?:Name|Buyer|Lead|Contact|From)[:\s]+([A-Z][a-z]+)\s+([A-Z][a-z]+)/,
     /^([A-Z][a-z]+)\s+([A-Z][a-z]+)\s+(?:is interested|has inquired|sent you)/m,
@@ -105,22 +116,25 @@ function parseLeadEmail(fromEmail, subject, body, agentId) {
   ];
   for (const p of namePatterns) {
     const m = body.match(p) || subject.match(p);
-    if (m) { lead.fname = m[1]; lead.lname = m[2]; break; }
+    if (m) {
+      lead.fname = sanitizeField(m[1], 50);
+      lead.lname = sanitizeField(m[2], 50);
+      break;
+    }
   }
 
-  // ── Email ────────────────────────────────────────────────────────────────
+  // ── Email ──────────────────────────────────────────────────────────────────
   const emailMatch = body.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-  // Exclude notification sender addresses (zillow.com, homes.com etc.)
   if (emailMatch) {
     const skip = ['zillow','homes.com','realtor.com','redfin','trulia','postmark','sayhelloleads'];
-    if (!skip.some(s => emailMatch[0].includes(s))) lead.email = emailMatch[0];
+    if (!skip.some(s => emailMatch[0].includes(s))) lead.email = emailMatch[0].slice(0, 200);
   }
 
-  // ── Phone ────────────────────────────────────────────────────────────────
-  const phoneMatch = body.match(/(?:\+?1[\s\-.]?)?\(?(\d{3})\)?[\s\-.]?(\d{3})[\s\-.]?(\d{4})/);
-  if (phoneMatch) lead.phone = phoneMatch[0].replace(/\s/g,'');
+  // ── Phone ──────────────────────────────────────────────────────────────────
+  const phoneMatch = body.match(/(?:\+?1[\s\-.]?)?\(?(\\d{3})\)?[\s\-.]?(\d{3})[\s\-.]?(\d{4})/);
+  if (phoneMatch) lead.phone = phoneMatch[0].replace(/\s/g, '').slice(0, 20);
 
-  // ── Property ─────────────────────────────────────────────────────────────
+  // ── Property ───────────────────────────────────────────────────────────────
   const propPatterns = [
     /(?:property|address|listing|home)[:\s]+([^\n]{10,100})/i,
     /interested in\s+([^\n]{10,100})/i,
@@ -129,12 +143,20 @@ function parseLeadEmail(fromEmail, subject, body, agentId) {
   ];
   for (const p of propPatterns) {
     const m = body.match(p) || subject.match(p);
-    if (m) { lead.property = m[1].trim().slice(0, 120); break; }
+    if (m) { lead.property = sanitizeField(m[1], 120); break; }
   }
-  if (!lead.property) lead.property = subject.replace(/^(fwd|re|fw):\s*/i,'').slice(0,80);
+  if (!lead.property) {
+    lead.property = sanitizeField(subject.replace(/^(fwd|re|fw):\s*/i, ''), 80);
+  }
 
-  // ── Message ──────────────────────────────────────────────────────────────
-  lead.messages = [{ role: 'lead', text: body.slice(0, 600) }];
+  // ── Message ────────────────────────────────────────────────────────────────
+  // Cap at 500 chars and strip injection chars — this goes directly into AI prompts
+  const safeBody = body
+    .replace(/[`<>]/g, '')
+    .trim()
+    .slice(0, 500);
+
+  lead.messages = [{ role: 'lead', text: safeBody }];
 
   return lead;
 }
