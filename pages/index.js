@@ -1212,7 +1212,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                     {/* ── ZILLOW / HOMES.COM / REALTOR.COM ─────────────────────── */}
           {(() => {
             const agentId = session?.user?.id || '';
-            const inboundAddr = agentId ? `${agentId}@inbound.postmarkapp.com` : '';
+            const inboundAddr = agentId ? `${agentId}@inbound.sayhelloleads.com` : '';
             const ForwardingAddress = ({ addr }) => addr ? (
               <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem', marginTop: '.75rem' }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
@@ -1459,7 +1459,7 @@ Vercel automatically injects <code>KV_REST_API_URL</code> and <code>KV_REST_API_
 2. Create a Server → click the <strong>Inbound</strong> tab<br>
 3. Set <strong>Inbound Webhook URL</strong> to: <code>https://www.sayhelloleads.com/api/inbound-email</code><br>
 4. Click Save.<br><br>
-That's it. Each agent now automatically gets a unique forwarding address (<code>{agentId}@inbound.postmarkapp.com</code>) shown on their Integrations page. They paste it into Zillow/Homes.com — no further Postmark work needed by anyone.`,
+That's it. Each agent now automatically gets a unique forwarding address (<code>{agentId}@inbound.sayhelloleads.com</code>) shown on their Integrations page. They paste it into Zillow/Homes.com — no further Postmark work needed by anyone.`,
   },
 ];
 
