@@ -24,13 +24,16 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PUT') {
-    const { name, agencyName, notifyEmail, phone, agentNotifyPhone } = req.body || {};
+    const { name, agencyName, notifyEmail, phone, agentNotifyPhone, zillowDone, homesDone, realtorDone } = req.body || {};
     const allowed = {};
     if (name)        allowed.name        = name.trim();
     if (agencyName !== undefined) allowed.agencyName = agencyName.trim();
     if (notifyEmail !== undefined) allowed.notifyEmail = notifyEmail.trim();
     if (phone !== undefined) allowed.phone = phone.trim();
     if (agentNotifyPhone !== undefined) allowed.agentNotifyPhone = agentNotifyPhone.trim();
+    if (zillowDone  !== undefined) allowed.zillowDone  = !!zillowDone;
+    if (homesDone   !== undefined) allowed.homesDone   = !!homesDone;
+    if (realtorDone !== undefined) allowed.realtorDone = !!realtorDone;
 
     const updated = await updateUserProfile(userId, allowed);
     if (!updated) return res.status(404).json({ error: 'User not found' });
