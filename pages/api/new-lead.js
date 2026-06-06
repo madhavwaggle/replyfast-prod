@@ -153,6 +153,7 @@ export async function triggerAIResponse(lead, agent, cfg) {
 
     // ── 5. Notify agent ────────────────────────────────────────────────────
     const agentEmail = agent?.notifyEmail || agent?.email;
+    if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
     if (agentEmail) {
       await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
         .catch(e => console.error('Notify error:', e.message));
