@@ -54,7 +54,7 @@ export default function App() {
   }
   const [scoring, setScoring] = useState(false);
   const [demoLead, setDemoLead] = useState(null);
-  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '' });
+  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   // Integration credentials
@@ -138,6 +138,7 @@ export default function App() {
           agencyName: data.profile.agencyName || '',
           notifyEmail: data.profile.notifyEmail || data.profile.email || '',
           phone: data.profile.phone || '',
+          agentNotifyPhone: data.profile.agentNotifyPhone || '',
         });
       }
     } catch (e) { console.error('loadProfile error:', e); }
@@ -1157,8 +1158,8 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                   <input className="setup-input" type="email" value={profile.notifyEmail} onChange={e => setProfile(p => ({ ...p, notifyEmail: e.target.value }))} placeholder="you@yourrealty.com" />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Your phone <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
-                  <input className="setup-input" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="(513) 555-0100" />
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Your mobile <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(for lead SMS alerts)</span></label>
+                  <input className="setup-input" type="tel" value={profile.agentNotifyPhone} onChange={e => setProfile(p => ({ ...p, agentNotifyPhone: e.target.value }))} placeholder="+15135550100" />
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
