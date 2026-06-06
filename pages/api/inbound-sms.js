@@ -20,6 +20,11 @@ export default async function handler(req, res) {
   const { From, To, Body } = req.body;
   if (!From || !Body) return res.status(400).end();
 
+  // Ignore inbound texts to the platform notify number — outbound-only.
+  if (To && process.env.TWILIO_NOTIFY_FROM && To === process.env.TWILIO_NOTIFY_FROM) {
+    return res.status(200).send('<Response></Response>');
+  }
+
   const agentId = await findAgentByTwilioPhone(To);
   if (!agentId) {
     console.warn('No agent found for Twilio number:', To);
