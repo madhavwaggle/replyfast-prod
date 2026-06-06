@@ -1,9 +1,9 @@
 /**
  * /api/profile
  * GET  — return current agent profile
- * PUT  — update name, agencyName, notifyEmail, phone
+ * PUT  — update name, agencyName, notifyEmail, phone, agentNotifyPhone,
+ *         zillowDone, homesDone, realtorDone, redfinDone
  */
-
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../lib/auth';
 import { getUserById } from '../../lib/users';
@@ -18,22 +18,22 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const user = await getUserById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    // Never return password hash
     const { passwordHash, ...safe } = user;
     return res.status(200).json({ profile: safe });
   }
 
   if (req.method === 'PUT') {
-    const { name, agencyName, notifyEmail, phone, agentNotifyPhone, zillowDone, homesDone, realtorDone } = req.body || {};
+    const { name, agencyName, notifyEmail, phone, agentNotifyPhone, zillowDone, homesDone, realtorDone, redfinDone } = req.body || {};
     const allowed = {};
-    if (name)        allowed.name        = name.trim();
-    if (agencyName !== undefined) allowed.agencyName = agencyName.trim();
-    if (notifyEmail !== undefined) allowed.notifyEmail = notifyEmail.trim();
-    if (phone !== undefined) allowed.phone = phone.trim();
+    if (name)                    allowed.name             = name.trim();
+    if (agencyName !== undefined) allowed.agencyName      = agencyName.trim();
+    if (notifyEmail !== undefined) allowed.notifyEmail    = notifyEmail.trim();
+    if (phone !== undefined)      allowed.phone            = phone.trim();
     if (agentNotifyPhone !== undefined) allowed.agentNotifyPhone = agentNotifyPhone.trim();
-    if (zillowDone  !== undefined) allowed.zillowDone  = !!zillowDone;
-    if (homesDone   !== undefined) allowed.homesDone   = !!homesDone;
-    if (realtorDone !== undefined) allowed.realtorDone = !!realtorDone;
+    if (zillowDone  !== undefined) allowed.zillowDone    = !!zillowDone;
+    if (homesDone   !== undefined) allowed.homesDone      = !!homesDone;
+    if (realtorDone !== undefined) allowed.realtorDone   = !!realtorDone;
+    if (redfinDone  !== undefined) allowed.redfinDone    = !!redfinDone;
 
     const updated = await updateUserProfile(userId, allowed);
     if (!updated) return res.status(404).json({ error: 'User not found' });
