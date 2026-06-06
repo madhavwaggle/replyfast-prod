@@ -54,7 +54,7 @@ export default function App() {
   }
   const [scoring, setScoring] = useState(false);
   const [demoLead, setDemoLead] = useState(null);
-  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '', zillowDone: false, homesDone: false, realtorDone: false, redfinDone: false });
+  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '', zillowDone: false, homesDone: false, realtorDone: false, redfinDone: false, facebookDone: false });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   // Integration credentials
@@ -143,6 +143,7 @@ export default function App() {
           homesDone:    !!(data.profile.homesDone),
           realtorDone:  !!(data.profile.realtorDone),
           redfinDone:   !!(data.profile.redfinDone),
+          facebookDone: !!(data.profile.facebookDone),
         });
       }
     } catch (e) { console.error('loadProfile error:', e); }
@@ -610,7 +611,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <div className="integration-bar">
             <h3>Works with every lead source <em>automatically</em></h3>
             <div className="integrations">
-              {['Zillow Premier Agent','Homes.com','Realtor.com','Redfin','SMS / Text','Your Website','Zapier / Webhooks'].map(s => (
+              {['Zillow Premier Agent','Homes.com','Realtor.com','Redfin','Facebook & Instagram Ads','SMS / Text','Your Website','Zapier / Webhooks'].map(s => (
                 <div className="integration-chip" key={s}><span className="dot-green" />{s}</div>
               ))}
             </div>
@@ -1359,7 +1360,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
               </IntegCard>
 
-              <IntegCard icon="📘" title="Facebook & Instagram Lead Ads" badge="Via Zapier" status={false}
+              <IntegCard icon="📘" title="Facebook & Instagram Ads" badge="Via Zapier" status={false}
                 desc="Capture leads directly from your Facebook and Instagram ad campaigns — no manual checking required."
                 link="https://zapier.com/apps/facebook-lead-ads/integrations" linkLabel="Open Zapier → Facebook Lead Ads →"
               >
@@ -1386,6 +1387,23 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
                 <div style={{ background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px', color: 'var(--sage)', fontWeight: '500' }}>
                   ✓ Once live, every Facebook or Instagram lead form submission triggers an instant AI response and shows up in your dashboard automatically.
+                </div>
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                  <input
+                    type="checkbox"
+                    id="facebook-done"
+                    checked={!!profile['facebookDone']}
+                    onChange={async e => {
+                      const val = e.target.checked;
+                      setProfile(p => ({ ...p, facebookDone: val }));
+                      await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ facebookDone: val }) });
+                      loadChecklist();
+                    }}
+                    style={{ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <label htmlFor="facebook-done" style={{ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile['facebookDone'] ? 'var(--sage)' : 'var(--black)' }}>
+                    {profile['facebookDone'] ? "✓ Done — Facebook & Instagram Ads connected via Zapier" : "I've connected Facebook Lead Ads via Zapier"}
+                  </label>
                 </div>
               </IntegCard>
 
