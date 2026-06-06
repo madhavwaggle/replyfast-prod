@@ -1249,6 +1249,23 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                   3. Add your forwarding address as an <em>additional</em> recipient
                 </div>
                 <ForwardingAddress addr={inboundAddr} />
+                <div style={ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '.6rem' }>
+                  <input
+                    type="checkbox"
+                    id="zillow-done"
+                    checked={!!profile['zillowDone']}
+                    onChange={async e => {
+                      const val = e.target.checked;
+                      setProfile(p => ({ ...p, zillowDone: val }));
+                      await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ zillowDone: val }) });
+                      loadChecklist();
+                    }}
+                    style={ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }
+                  />
+                  <label htmlFor="zillow-done" style={ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile['zillowDone'] ? 'var(--sage)' : 'var(--black)' }>
+                    {profile['zillowDone'] ? "✓ Done — forwarding is set up" : "Mark as done once you've added the forwarding address"}
+                  </label>
+                </div>
               </IntegCard>
 
               <IntegCard icon="🏡" title="Homes.com" badge="Email forwarding" status={false}
@@ -1262,6 +1279,23 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                   3. Add your forwarding address as an additional recipient
                 </div>
                 <ForwardingAddress addr={inboundAddr} />
+                <div style={ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '.6rem' }>
+                  <input
+                    type="checkbox"
+                    id="homes-done"
+                    checked={!!profile['homesDone']}
+                    onChange={async e => {
+                      const val = e.target.checked;
+                      setProfile(p => ({ ...p, homesDone: val }));
+                      await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ homesDone: val }) });
+                      loadChecklist();
+                    }}
+                    style={ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }
+                  />
+                  <label htmlFor="homes-done" style={ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile['homesDone'] ? 'var(--sage)' : 'var(--black)' }>
+                    {profile['homesDone'] ? "✓ Done — forwarding is set up" : "Mark as done once you've added the forwarding address"}
+                  </label>
+                </div>
               </IntegCard>
 
               <IntegCard icon="🔑" title="Realtor.com" badge="Email forwarding" status={false}
@@ -1275,42 +1309,24 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                   3. Add your forwarding address as an additional notification email
                 </div>
                 <ForwardingAddress addr={inboundAddr} />
-              </IntegCard>
-
-              {/* ── FORWARDING CONFIRMATION — one checkbox per platform ── */}
-              <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '10px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.75rem' }}>
-                  Mark platforms where you've added your forwarding address
+                <div style={ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '.6rem' }>
+                  <input
+                    type="checkbox"
+                    id="realtor-done"
+                    checked={!!profile['realtorDone']}
+                    onChange={async e => {
+                      const val = e.target.checked;
+                      setProfile(p => ({ ...p, realtorDone: val }));
+                      await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ realtorDone: val }) });
+                      loadChecklist();
+                    }}
+                    style={ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }
+                  />
+                  <label htmlFor="realtor-done" style={ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile['realtorDone'] ? 'var(--sage)' : 'var(--black)' }>
+                    {profile['realtorDone'] ? "✓ Done — forwarding is set up" : "Mark as done once you've added the forwarding address"}
+                  </label>
                 </div>
-                {[
-                  { id: 'zillow-done',   field: 'zillowDone',  label: 'Zillow Premier Agent' },
-                  { id: 'homes-done',    field: 'homesDone',   label: 'Homes.com' },
-                  { id: 'realtor-done',  field: 'realtorDone', label: 'Realtor.com' },
-                ].map(({ id, field, label }) => (
-                  <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.5rem' }}>
-                    <input
-                      type="checkbox"
-                      id={id}
-                      checked={!!profile[field]}
-                      onChange={async e => {
-                        const val = e.target.checked;
-                        setProfile(p => ({ ...p, [field]: val }));
-                        await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: val }) });
-                        loadChecklist();
-                      }}
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }}
-                    />
-                    <label htmlFor={id} style={{ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile[field] ? 'var(--sage)' : 'var(--black)' }}>
-                      {profile[field] ? `✓ ${label} — forwarding set up` : `${label} — forwarding not yet set up`}
-                    </label>
-                  </div>
-                ))}
-                {(profile.zillowDone || profile.homesDone || profile.realtorDone) && (
-                  <div style={{ fontSize: '12px', color: 'var(--sage)', marginTop: '.5rem', fontWeight: '500' }}>
-                    ✓ Leads from your checked platforms will flow in automatically
-                  </div>
-                )}
-              </div>
+              </IntegCard>
 
               <IntegCard icon="⚡" title="Your website or Zapier" badge="Any source"
                 desc="Connect any lead source via a simple webhook POST. Works with Zapier, your own contact form, or any CRM."
