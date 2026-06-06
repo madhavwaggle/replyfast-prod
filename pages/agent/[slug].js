@@ -242,7 +242,10 @@ export default function AgentPage({ agent, notFound }) {
         {/* ── AGENT HEADER ───────────────────────────────────────────────────── */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--sage)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '600', margin: '0 auto 1rem', fontFamily: "'Instrument Serif', serif" }}>
-            {agentName.charAt(0).toUpperCase()}
+            {agent?.photoUrl
+              ? <img src={agent.photoUrl} alt={agentName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ color: '#fff', fontSize: '28px', fontWeight: '600', fontFamily: "'Instrument Serif', serif" }}>{agentName.charAt(0).toUpperCase()}</span>
+            }
           </div>
           <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '1.75rem', marginBottom: '.2rem' }}>{agentName}</h1>
           {agentAgency && <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '.4rem' }}>{agentAgency}</p>}
