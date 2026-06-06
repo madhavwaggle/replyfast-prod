@@ -54,7 +54,7 @@ export default function App() {
   }
   const [scoring, setScoring] = useState(false);
   const [demoLead, setDemoLead] = useState(null);
-  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '' });
+  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '', zillowDone: false, homesDone: false, realtorDone: false });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   // Integration credentials
@@ -139,6 +139,9 @@ export default function App() {
           notifyEmail: data.profile.notifyEmail || data.profile.email || '',
           phone: data.profile.phone || '',
           agentNotifyPhone: data.profile.agentNotifyPhone || '',
+          zillowDone:   !!(data.profile.zillowDone),
+          homesDone:    !!(data.profile.homesDone),
+          realtorDone:  !!(data.profile.realtorDone),
         });
       }
     } catch (e) { console.error('loadProfile error:', e); }
@@ -204,7 +207,7 @@ export default function App() {
       const c   = credsData.credentials || {};
       setChecklist({
         profile: !!(p.name && p.notifyEmail),
-        zillow:  !!(c.postmarkToken?.isSet),
+        zillow:  !!(p.zillowDone || p.homesDone || p.realtorDone),
         sms:     !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
         website: !!(c.webhookSecret?.isSet),
       });
@@ -984,7 +987,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
                   {[
                     { done: checklist.profile, label: 'Complete your profile',               dest: 'profile',       hint: 'Name + notification email' },
-                    { done: checklist.zillow,   label: 'Forward leads from Zillow / Homes.com', dest: 'integrations',  hint: '2-minute email setting' },
+                    { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com, or Realtor.com', dest: 'integrations',  hint: '2-minute email setting' },
                     { done: checklist.sms,      label: 'Connect Twilio for SMS replies',        dest: 'integrations',  hint: 'AI responds via text' },
                     { done: checklist.website,  label: 'Connect your website or Zapier',        dest: 'integrations',  hint: 'Optional — any lead source' },
                   ].map((item, i) => (
@@ -1267,6 +1270,41 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
                 <ForwardingAddress addr={inboundAddr} />
               </IntegCard>
+
+              {/* ── FORWARDING CONFIRMATION — one checkbox per platform ── */}
+              <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '10px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.75rem' }}>
+                  Mark platforms where you've added your forwarding address
+                </div>
+                {[
+                  { id: 'zillow-done',   field: 'zillowDone',  label: 'Zillow Premier Agent' },
+                  { id: 'homes-done',    field: 'homesDone',   label: 'Homes.com' },
+                  { id: 'realtor-done',  field: 'realtorDone', label: 'Realtor.com' },
+                ].map(({ id, field, label }) => (
+                  <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.5rem' }}>
+                    <input
+                      type="checkbox"
+                      id={id}
+                      checked={!!profile[field]}
+                      onChange={async e => {
+                        const val = e.target.checked;
+                        setProfile(p => ({ ...p, [field]: val }));
+                        await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: val }) });
+                        loadChecklist();
+                      }}
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--sage)', cursor: 'pointer', flexShrink: 0 }}
+                    />
+                    <label htmlFor={id} style={{ fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: profile[field] ? 'var(--sage)' : 'var(--black)' }}>
+                      {profile[field] ? `✓ ${label} — forwarding set up` : `${label} — forwarding not yet set up`}
+                    </label>
+                  </div>
+                ))}
+                {(profile.zillowDone || profile.homesDone || profile.realtorDone) && (
+                  <div style={{ fontSize: '12px', color: 'var(--sage)', marginTop: '.5rem', fontWeight: '500' }}>
+                    ✓ Leads from your checked platforms will flow in automatically
+                  </div>
+                )}
+              </div>
 
               <IntegCard icon="⚡" title="Your website or Zapier" badge="Any source"
                 desc="Connect any lead source via a simple webhook POST. Works with Zapier, your own contact form, or any CRM."
