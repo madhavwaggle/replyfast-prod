@@ -1364,10 +1364,19 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           {/* ── CUSTOM SEND-FROM EMAIL ───────────────────────────────── */}
           <IntegCard
             icon="✍️" title="Custom send-from email" badge="Optional"
-            desc="By default AI replies come from noreply@sayhelloleads.com. Enter your name and email below to personalise what leads see in their inbox."
+            desc="Personalise what leads see in their inbox when they receive an AI reply. By default it comes from noreply@sayhelloleads.com."
           >
+            <div style={{ background: '#eef4f0', border: '1px solid var(--sage-mid)', borderRadius: '8px', padding: '.85rem 1rem', marginBottom: '1rem', fontSize: '13px', lineHeight: '1.6' }}>
+              <div style={{ fontWeight: '600', marginBottom: '.3rem' }}>✅ Recommended</div>
+              Use your name with a Say HelloLeads address — leads see your name and delivery is guaranteed.<br />
+              <code style={{ background: 'rgba(0,0,0,.06)', padding: '.1rem .4rem', borderRadius: '4px', fontSize: '12px' }}>Jane Smith &lt;jane@sayhelloleads.com&gt;</code>
+            </div>
+            <div style={{ background: '#fdf3e7', border: '1px solid #e8c99a', borderRadius: '8px', padding: '.85rem 1rem', marginBottom: '1rem', fontSize: '13px', lineHeight: '1.6' }}>
+              <div style={{ fontWeight: '600', marginBottom: '.3rem' }}>⚠️ Using your own email address?</div>
+              If you enter something like <code style={{ background: 'rgba(0,0,0,.06)', padding: '.1rem .4rem', borderRadius: '4px', fontSize: '12px' }}>jane@hydeparkrealty.com</code>, this requires a technical setup on your domain first. Without it, your emails may go to spam or not arrive at all. <strong>Contact us and we'll get it sorted for you.</strong>
+            </div>
             <CredField
-              label="From name & email" field="emailFrom" placeholder="Jane Smith <jane@hydeparkrealty.com>"
+              label="From name & email" field="emailFrom" placeholder="Jane Smith <jane@sayhelloleads.com>"
               current={creds.emailFrom} saving={credsSaving.emailFrom} msg={credsMsg.emailFrom}
               onSave={saveCred}
             />
