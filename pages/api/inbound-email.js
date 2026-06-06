@@ -87,6 +87,7 @@ export default async function handler(req, res) {
 
   // Notify agent — fires after scoring so notification shows HOT/WARM/COLD
   const agentEmail = agent?.notifyEmail || agent?.email;
+  if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
   if (agentEmail) {
     const agentName = agent?.name || 'your agent';
     await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
