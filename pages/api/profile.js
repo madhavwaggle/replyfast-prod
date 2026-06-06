@@ -30,6 +30,7 @@ export default async function handler(req, res) {
     if (notifyEmail !== undefined) allowed.notifyEmail    = notifyEmail.trim();
     if (phone !== undefined)      allowed.phone            = phone.trim();
     if (agentNotifyPhone !== undefined) allowed.agentNotifyPhone = agentNotifyPhone.trim();
+    if (photoUrl !== undefined) allowed.photoUrl = photoUrl;
     if (zillowDone  !== undefined) allowed.zillowDone    = !!zillowDone;
     if (homesDone   !== undefined) allowed.homesDone      = !!homesDone;
     if (realtorDone !== undefined) allowed.realtorDone   = !!realtorDone;
