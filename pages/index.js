@@ -507,7 +507,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           {/* ── HERO ────────────────────────────────────────────────── */}
           <div className="hero">
             <div className="hero-badge">✦ AI-powered · Built for real estate agents</div>
-            <h1>Never miss a lead.<br /><em>Never waste time on a bad one.</em></h1>
+            <h1>Respond to every lead in 60 seconds.<br /><em>Know who to call first.</em></h1>
             <p>Say HelloLeads responds to every inquiry in under 60 seconds, qualifies the conversation, and tells you exactly who's worth calling — so you spend your time closing, not chasing.</p>
             <div className="hero-cta">
               <button className="btn-primary" onClick={() => router.push('/register')}>Start free — no credit card →</button>
