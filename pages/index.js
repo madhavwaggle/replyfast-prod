@@ -506,18 +506,25 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
 
           {/* ── HERO ────────────────────────────────────────────────── */}
           <div className="hero">
-            <div className="hero-badge">✦ Powered by AI · Built for real estate agents</div>
-            <h1>Respond to every lead<br /><em>in 60 seconds.</em> Automatically.</h1>
-            <p>Most agents take 15 hours to reply. By then, the buyer has moved on. Say HelloLeads responds the moment a lead comes in — qualifies every lead — and tells you exactly who to call first.</p>
+            <div className="hero-badge">✦ AI-powered · Built for real estate agents</div>
+            <h1>Never miss a lead.<br /><em>Never waste time on a bad one.</em></h1>
+            <p>Say HelloLeads responds to every inquiry in under 60 seconds, qualifies the conversation, and tells you exactly who's worth calling — so you spend your time closing, not chasing.</p>
             <div className="hero-cta">
               <button className="btn-primary" onClick={() => router.push('/register')}>Start free — no credit card →</button>
               <button className="btn-outline" onClick={() => setView('demo')}>See live demo</button>
             </div>
             <div style={{ marginTop: '1.5rem', fontSize: '13px', color: 'var(--muted)', display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <span>✓ Setup in under 5 minutes</span>
-              <span>✓ Works with Zillow, SMS, your website</span>
+              <span>✓ Works with Zillow, Homes.com, Realtor.com + more</span>
               <span>✓ Cancel anytime</span>
             </div>
+          </div>
+
+          {/* ── NOT A BOT BANNER ────────────────────────────────────── */}
+          <div style={{ background: 'var(--black)', color: 'var(--white)', padding: '1.1rem 2rem', textAlign: 'center', fontSize: '14px' }}>
+            <span style={{ opacity: .7, marginRight: '.5rem' }}>💬</span>
+            <strong>Sounds like you, not a bot.</strong>
+            <span style={{ color: 'rgba(255,255,255,.6)', marginLeft: '.75rem' }}>Leads respond because they think they're texting your assistant — not talking to software.</span>
           </div>
 
           {/* ── PAIN STATS ──────────────────────────────────────────── */}
@@ -533,6 +540,64 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 <div className="stat-label">{l}</div>
               </div>
             ))}
+          </div>
+
+          {/* ── SPEED TO LEAD ───────────────────────────────────────── */}
+          <div style={{ background: 'var(--cream)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '4rem 2rem' }}>
+            <div style={{ maxWidth: '860px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', alignItems: 'center' }}>
+              <div>
+                <div className="section-label">Speed-to-lead is everything</div>
+                <div className="section-title" style={{ marginBottom: '1rem' }}>The first agent to reply wins the deal.</div>
+                <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.8', marginBottom: '1.25rem' }}>
+                  Buyers contact multiple agents at once. Whoever replies first — and sounds the most human — earns the trust. The industry average is 15 hours. Say HelloLeads replies in under 60 seconds, every time, day or night.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+                  {[
+                    ['🏆', 'First to reply wins', '78% of buyers choose the agent who responds first'],
+                    ['⏱️', 'Speed drops fast', 'A 5-minute reply is 21× more effective than a 30-minute one'],
+                    ['😴', 'Leads don't wait', 'Most inquiries happen evenings and weekends — when you're offline'],
+                  ].map(([icon, title, desc]) => (
+                    <div key={title} style={{ display: 'flex', gap: '.75rem', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: '1.1rem', marginTop: '.1rem' }}>{icon}</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--black)' }}>{title}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '16px', padding: '2rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '1.25rem' }}>Without Say HelloLeads</div>
+                {[
+                  ['Lead submits inquiry', '12:00 pm', 'var(--muted)', ''],
+                  ['You finish showing a home', '2:30 pm', 'var(--muted)', ''],
+                  ['You see the notification', '4:15 pm', 'var(--muted)', ''],
+                  ['You reply to the lead', '4:22 pm', '#c0392b', '4+ hours later'],
+                  ['Lead already signed with someone else', '4:23 pm', '#c0392b', '💸'],
+                ].map(([event, time, color, tag]) => (
+                  <div key={event} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.75rem', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--muted)', width: '52px', flexShrink: 0, fontSize: '12px' }}>{time}</span>
+                    <span style={{ color }}>{event}</span>
+                    {tag && <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: '600', color: '#c0392b', whiteSpace: 'nowrap' }}>{tag}</span>}
+                  </div>
+                ))}
+                <div style={{ height: '1px', background: 'var(--border)', margin: '1.25rem 0' }} />
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '1rem' }}>With Say HelloLeads</div>
+                {[
+                  ['Lead submits inquiry', '12:00 pm', 'var(--muted)', ''],
+                  ['AI responds instantly', '12:00 pm', 'var(--sage)', '< 60 seconds ✓'],
+                  ['AI qualifies the lead', '12:02 pm', 'var(--sage)', 'budget, timeline, pre-approval'],
+                  ['You get a 🔥 HOT alert', '12:03 pm', 'var(--sage)', 'call now'],
+                ].map(([event, time, color, tag]) => (
+                  <div key={event} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '.75rem', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--muted)', width: '52px', flexShrink: 0, fontSize: '12px' }}>{time}</span>
+                    <span style={{ color }}>{event}</span>
+                    {tag && <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: '600', color: 'var(--sage)', whiteSpace: 'nowrap' }}>{tag}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* ── PROBLEM → SOLUTION ──────────────────────────────────── */}
@@ -558,9 +623,9 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             <div className="steps">
               {[
                 ['1', 'Lead comes in — any source', 'Zillow, Homes.com, Realtor.com, a text, or your website. Any time, day or night.'],
-                ['2', 'AI responds in under 60s', 'A warm, personalized reply goes out immediately — written in your voice, referencing the exact property.'],
-                ['3', 'Lead gets qualified', 'The AI has a natural back-and-forth — learning timeline, budget, pre-approval, and motivation.'],
-                ['4', 'You get the brief', '🔥 Hot leads trigger an instant alert: who they are, what they want, and what to say when you call.'],
+                ['2', 'AI responds in under 60s', 'A warm, human reply goes out immediately — written in your voice, referencing the exact property. Leads think they're texting your assistant.'],
+                ['3', 'Lead gets qualified', 'The AI has a natural back-and-forth — uncovering timeline, budget, pre-approval status, and motivation without ever feeling like a script.'],
+                ['4', 'You get the brief', '🔥 Hot leads trigger an instant alert with everything you need: who they are, what they want, and exactly what to say when you call.'],
               ].map(([n,h,p]) => (
                 <div className="step" key={n}><div className="step-num">{n}</div><h3>{h}</h3><p>{p}</p></div>
               ))}
@@ -572,6 +637,9 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             <div style={{ maxWidth: '860px', margin: '0 auto' }}>
               <div className="section-label">AI lead scoring</div>
               <div className="section-title">Know exactly who to call first.</div>
+              <p style={{ fontSize: '14px', color: 'var(--muted)', maxWidth: '540px', lineHeight: '1.8', marginBottom: '2rem' }}>
+                After every conversation the AI scores the lead automatically. No guesswork — just a clear signal on where to spend your time.
+              </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
                 <div style={{ background: '#fde8e8', border: '1.5px solid #f5c6c6', borderRadius: '14px', padding: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.75rem' }}>
@@ -622,9 +690,9 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             <div className="section-label">What agents say</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
               {[
-                ["“I used to lose leads every weekend. Now they get a response in under a minute — whether I’m showing a home or at my kid’s soccer game.”", 'Maria C.', 'Keller Williams, Cincinnati'],
-                ["“My Zillow spend was $600/mo and I was missing half the leads. In the first week using this I booked 3 showings from leads I would have lost.”", 'James T.', 'RE/MAX, Columbus'],
-                ["“The AI sounds more professional than my usual texts. Leads actually think they’re talking to my assistant. That’s exactly what I wanted.”", 'Priya S.', 'Independent Agent, Dayton'],
+                ['“I used to lose leads every weekend. Now they get a response in under a minute — whether I’m showing a home or at my kid’s soccer game.”', 'Maria C.', 'Keller Williams, Cincinnati'],
+                ['“My Zillow spend was $600/mo and I was missing half the leads. In the first week using this I booked 3 showings from leads I would have lost.”', 'James T.', 'RE/MAX, Columbus'],
+                ['“The AI sounds more professional than my usual texts. Leads actually think they’re talking to my assistant. That’s exactly what I wanted.”', 'Priya S.', 'Independent Agent, Dayton'],
               ].map(([quote, name, title]) => (
                 <div key={name} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.5rem' }}>
                   <div style={{ fontSize: '13px', color: 'var(--black)', lineHeight: '1.7', marginBottom: '1rem', fontStyle: 'italic' }}>{quote}</div>
@@ -635,8 +703,26 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             </div>
           </div>
 
-          {/* ── PRICING ─────────────────────────────────────────────── */}
+          {/* ── FAQ ─────────────────────────────────────────────────── */}
           <div style={{ background: 'var(--cream)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '4rem 2rem' }}>
+            <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+              <div className="section-label">Common questions</div>
+              <div className="section-title">Straight answers.</div>
+              {[
+                ['Does it sound like a bot?', 'No. The AI is trained to sound like a real person texting — warm, natural, and specific to the property the lead asked about. We hear this a lot: agents' leads think they're talking to their assistant.'],
+                ['What happens when I'm available?', 'The AI handles the first response and qualifies the lead. When a lead is HOT you get an instant alert with everything you need to take over the conversation. You decide when to step in.'],
+                ['Do leads know it's AI?', 'No — and that's intentional. The AI never identifies itself as a bot. It replies in your name and voice. Leads engage because it feels like a real person reaching out.'],
+                ['Which lead sources does it work with?', 'Zillow, Homes.com, Realtor.com, Redfin, Facebook Lead Ads, SMS, your website contact form, and any source that can send an email or a webhook — including Zapier.'],
+                ['How long does setup take?', 'Under 5 minutes for most agents. You forward your Zillow (or Homes.com, Realtor.com) lead notification emails to your unique address and you're live. No developer needed.'],
+                ['What if a lead asks a question the AI can't answer?', 'If the AI doesn't know a specific detail — like a listing price or square footage — it says it'll confirm and follow up. It never invents answers.'],
+              ].map(([q, a], i) => (
+                <FAQItem key={i} question={q} answer={a} />
+              ))}
+            </div>
+          </div>
+
+          {/* ── PRICING ─────────────────────────────────────────────── */}
+          <div style={{ padding: '4rem 2rem' }}>
             <div style={{ maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
               <div className="section-label">Pricing</div>
               <div className="section-title" style={{ margin: '0 auto 2rem' }}>Simple, straightforward.</div>
@@ -1502,6 +1588,28 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
         </section>
       )}
     </>
+  );
+}
+
+// ─── FAQ ITEM ────────────────────────────────────────────────────────────────────────────────
+
+function FAQItem({ question, answer }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)', padding: '1.1rem 0' }}>
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: '1rem' }}
+      >
+        <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--black)', lineHeight: '1.5' }}>{question}</div>
+        <span style={{ fontSize: '18px', color: 'var(--sage)', flexShrink: 0, display: 'inline-block', transition: 'transform .2s', transform: open ? 'rotate(45deg)' : 'none', fontWeight: '300', lineHeight: 1 }}>+</span>
+      </div>
+      {open && (
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.8', marginTop: '.75rem', animation: 'fadeIn .2s ease' }}>
+          {answer}
+        </div>
+      )}
+    </div>
   );
 }
 
