@@ -98,7 +98,7 @@ export default async function handler(req, res) {
       try {
         const scorePrompt = buildScoringPrompt({ lead });
         const scoreResp = await anthropic.messages.create({
-          model:      'claude-sonnet-4-20250514',
+          model:      'claude-haiku-4-5-20251001', // Haiku is sufficient for structured JSON scoring
           max_tokens: 500,
           system:     scorePrompt.system,
           messages:   scorePrompt.messages,
