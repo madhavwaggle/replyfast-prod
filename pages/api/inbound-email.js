@@ -15,7 +15,6 @@
 import { saveLead } from '../../lib/db';
 import { getUserById } from '../../lib/users';
 import { getAgentConfig } from '../../lib/agentConfig';
-import { notifyAgentNewLead } from '../../lib/notify';
 import { triggerAIResponse } from './new-lead';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -77,22 +76,13 @@ export default async function handler(req, res) {
 
   await saveLead(lead);
 
-  // triggerAIResponse handles all AI reply, guardrails, scoring, and SMS/email
+  // triggerAIResponse handles AI reply, guardrails, scoring, SMS/email, and agent notification
   try {
     await Promise.race([
       triggerAIResponse(lead, agent, cfg),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000)),
     ]);
   } catch (e) { console.error('[inbound-email] AI error:', e.message); }
-
-  // Notify agent — fires after scoring so notification shows HOT/WARM/COLD
-  const agentEmail = agent?.notifyEmail || agent?.email;
-  if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
-  if (agentEmail) {
-    const agentName = agent?.name || 'your agent';
-    await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
-      .catch(e => console.error('[inbound-email] notify error:', e.message));
-  }
 
   return res.status(200).json({ id: lead.id, message: 'Lead captured' });
 }
@@ -211,5 +201,5 @@ function parseLeadEmail(fromEmail, subject, body, agentId) {
 }
 
 export const config = {
-  api: { bodyParser: { type: 'application/json' } },
+  api: { bodyParser: { type: 'application/json', sizeLimit: '5mb' } },
 };
