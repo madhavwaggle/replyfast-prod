@@ -12,6 +12,24 @@ import { buildConversationPrompt, buildScoringPrompt, parseScoreResponse } from 
 import { processReply, fallbackReply, validateScore } from '../../../lib/guardrails';
 import { notifyAgentNewLead } from '../../../lib/notify';
 import Anthropic from '@anthropic-ai/sdk';
+import { getRedis } from '../../../lib/redis';
+
+const AI_MONTHLY_CAP = 300;
+
+async function checkAndIncrementAICap(agentId) {
+  try {
+    const store = await getRedis();
+    if (!store) return true;
+    const month = new Date().toISOString().slice(0, 7);
+    const key = `ai:usage:${agentId}:${month}`;
+    const count = await store.incr(key);
+    if (count === 1) await store.expire(key, 60 * 60 * 24 * 35);
+    return count <= AI_MONTHLY_CAP;
+  } catch (e) {
+    console.error('AI cap check error:', e.message);
+    return true;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -31,6 +49,16 @@ export default async function handler(req, res) {
 
   const agentName = agent?.name || 'the agent';
   const anthropic = new Anthropic({ apiKey: cfg.anthropicKey });
+
+  // ── Monthly AI cap ─────────────────────────────────────────────────────
+  const withinCap = await checkAndIncrementAICap(lead.agentId);
+  if (!withinCap) {
+    console.warn(`[ai-cap] Agent ${lead.agentId} hit monthly cap on chat — saving lead without AI reply.`);
+    lead.messages.push({ role: 'lead', text: message });
+    lead.updatedAt = new Date().toISOString();
+    await saveLead(lead);
+    return res.status(200).json({ reply: "Thanks for your message! I'll be in touch shortly." });
+  }
 
   // Add the buyer's new message to history
   lead.messages.push({ role: 'lead', text: message });
@@ -74,7 +102,7 @@ export default async function handler(req, res) {
     try {
       const scorePrompt = buildScoringPrompt({ lead });
       const scoreResp = await anthropic.messages.create({
-        model:      'claude-sonnet-4-20250514',
+        model:      'claude-haiku-4-5-20251001', // Haiku is sufficient for structured JSON scoring
         max_tokens: 500,
         system:     scorePrompt.system,
         messages:   scorePrompt.messages,
