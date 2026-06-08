@@ -434,31 +434,55 @@ export default function App() {
 
     // Build a full qualifying system prompt — same rules as the live agent path
     const agentDisplayName = session?.user?.name || 'the agent';
-    const alreadyKnows = updatedLead.messages
-      .filter(m => m.role === 'ai')
-      .map(m => m.text)
-      .join(' ');
+
+    // Extract what's already been established from prior messages
+    const allLeadMessages = updatedLead.messages.filter(m => m.role === 'lead').map(m => m.text);
+    const allAiMessages   = updatedLead.messages.filter(m => m.role === 'ai').map(m => m.text);
+
+    // Build explicit "already asked / already answered" context
+    const askedQuestions  = allAiMessages.join(' ');
+    const leadAnswers     = allLeadMessages.join(' ');
+    const timelineAsked   = /timeline|moving|when|how soon/i.test(askedQuestions);
+    const budgetAsked     = /budget|price range|afford|spend/i.test(askedQuestions);
+    const preApprovalAsked = /pre.?approv|lender|financ/i.test(askedQuestions);
+    const phoneAsked      = /callback|phone|number|call you/i.test(askedQuestions);
+
+    const knownFacts = [];
+    if (/\b\d+\s*day/i.test(leadAnswers) || /\b\d+\s*month/i.test(leadAnswers) || /\bASAP\b|immediately|right away/i.test(leadAnswers))
+      knownFacts.push('timeline: already provided by lead');
+    if (/\$[\d,]+|\d+k\b|budget|afford/i.test(leadAnswers))
+      knownFacts.push('budget: already provided by lead');
+    if (phoneAsked || /\d{10}|\d{3}[-.\s]\d{3}/i.test(leadAnswers))
+      knownFacts.push('phone/callback: already collected');
+    const knownBlock = knownFacts.length > 0
+      ? `\nALREADY COLLECTED (DO NOT ASK AGAIN):\n${knownFacts.map(f => `- ${f}`).join('\n')}`
+      : '';
+
     const conversationSystemPrompt = `You are a real estate assistant texting on behalf of ${agentDisplayName} about ${currentLead.property}.
 
 IDENTITY: You are NOT an AI. Never mention AI, bots, or automation. If asked, deflect naturally.
-
+${knownBlock}
 CORE RULES:
 - Sound like a real human texting — warm, natural, conversational
 - 2–3 sentences max per reply
 - ONE question at a time — never ask two things
-- Always answer their question first, then qualify
-- Never repeat a question already answered in this conversation
+- Always acknowledge what they just said before moving on
+- NEVER repeat a question you already asked in this conversation
+- NEVER ask for something you already have
 
-QUALIFY IN THIS ORDER (skip if already answered):
-1. Timeline — when are they looking to move?
-2. Budget — do they have a price range?
-3. Pre-approval — have they been pre-approved?
-4. Also selling — are they also selling a home?
+ANTI-REPETITION (CRITICAL):
+Before you reply, mentally check: "Did I already ask this? Did they already answer this?"
+If yes → skip it entirely and ask the NEXT unknown thing or move toward scheduling.
+
+QUALIFY IN THIS ORDER (skip any already answered):
+${timelineAsked ? '✓ Timeline — DONE' : '1. Timeline — when are they looking to move?'}
+${budgetAsked   ? '✓ Budget — DONE'   : '2. Budget — do they have a price range?'}
+${preApprovalAsked ? '✓ Pre-approval — DONE' : '3. Pre-approval — have they been pre-approved?'}
+4. If timeline is short (≤60 days) and budget known → move toward scheduling a showing or call
 
 PROGRESSION — every reply should do ONE of:
-- Move toward a showing
-- Move toward a call with ${agentDisplayName}
-- Uncover a key qualifying signal
+- Acknowledge what they said + move to the next unknown
+- Move toward a showing or call with ${agentDisplayName}
 
 NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
     try {
