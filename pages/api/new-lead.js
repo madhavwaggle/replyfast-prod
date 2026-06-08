@@ -14,7 +14,7 @@ import { processReply, fallbackReply, validateScore } from '../../lib/guardrails
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRedis } from '../../lib/redis';
-import { notifyAgentNewLead } from '../../lib/notify';
+//import { notifyAgentNewLead } from '../../lib/notify';
 
 const AI_MONTHLY_CAP = 300; // per agent — raise once subscriptions are live
 
