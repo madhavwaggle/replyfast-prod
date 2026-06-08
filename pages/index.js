@@ -54,7 +54,10 @@ export default function App() {
   }
   const [scoring, setScoring] = useState(false);
   const [demoLead, setDemoLead] = useState(null);
-  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '', zillowDone: false, homesDone: false, realtorDone: false, redfinDone: false, facebookDone: false });
+  const [profile, setProfile] = useState({ name: '', agencyName: '', notifyEmail: '', phone: '', agentNotifyPhone: '', zillowDone: false, homesDone: false, realtorDone: false, redfinDone: false, facebookDone: false, photoUrl: '' });
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoMsg, setPhotoMsg] = useState('');
+  const photoInputRef = useRef(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   // Integration credentials
@@ -144,6 +147,7 @@ export default function App() {
           realtorDone:  !!(data.profile.realtorDone),
           redfinDone:   !!(data.profile.redfinDone),
           facebookDone: !!(data.profile.facebookDone),
+          photoUrl:     data.profile.photoUrl || '',
         });
       }
     } catch (e) { console.error('loadProfile error:', e); }
@@ -164,6 +168,60 @@ export default function App() {
     } catch { setProfileMsg('Save failed — try again'); }
     setProfileSaving(false);
     setTimeout(() => setProfileMsg(''), 3000);
+  }
+
+  async function uploadPhoto(file) {
+    if (!file) return;
+    setPhotoUploading(true);
+    setPhotoMsg('');
+    try {
+      // Client-side resize/compress using canvas
+      const dataUrl = await compressImage(file, 400, 0.82);
+      const sizeKB = Math.round((dataUrl.length * 0.75) / 1024);
+      if (sizeKB > 600) {
+        setPhotoMsg('Photo too large — try a smaller image');
+        setPhotoUploading(false);
+        return;
+      }
+      const res = await fetch('/api/upload-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoUrl: dataUrl }),
+      });
+      if (res.ok) {
+        setProfile(p => ({ ...p, photoUrl: dataUrl }));
+        setPhotoMsg('✓ Photo saved');
+      } else {
+        const err = await res.json();
+        setPhotoMsg(err.error || 'Upload failed');
+      }
+    } catch (e) {
+      setPhotoMsg('Upload failed — try again');
+    }
+    setPhotoUploading(false);
+    setTimeout(() => setPhotoMsg(''), 3000);
+  }
+
+  function compressImage(file, maxPx, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new window.Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   async function loadCreds() {
@@ -208,7 +266,7 @@ export default function App() {
       const p   = profData.profile || {};
       const c   = credsData.credentials || {};
       setChecklist({
-        profile: !!(p.name && p.notifyEmail),
+        profile: !!(p.name && p.notifyEmail && p.photoUrl),
         zillow:  !!(p.zillowDone || p.homesDone || p.realtorDone || p.redfinDone),
         sms:     !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
         website: !!(c.webhookSecret?.isSet),
@@ -457,14 +515,22 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 onClick={() => setAvatarOpen(o => !o)}
                 aria-label="Account menu"
               >
-                <div className="avatar-circle">
-                  {(session.user?.name || session.user?.email || '?').charAt(0).toUpperCase()}
+                <div className="avatar-circle" style={{ overflow: 'hidden', padding: 0 }}>
+                  {profile.photoUrl
+                    ? <img src={profile.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                    : (session.user?.name || session.user?.email || '?').charAt(0).toUpperCase()
+                  }
                 </div>
               </button>
               {avatarOpen && (
                 <div className="avatar-dropdown">
                   <div className="avatar-header">
-                    <div className="avatar-circle lg">{(session.user?.name || session.user?.email || '?').charAt(0).toUpperCase()}</div>
+                    <div className="avatar-circle lg" style={{ overflow: 'hidden', padding: 0 }}>
+                      {profile.photoUrl
+                        ? <img src={profile.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                        : (session.user?.name || session.user?.email || '?').charAt(0).toUpperCase()
+                      }
+                    </div>
                     <div>
                       <div className="avatar-name">{session.user?.name || 'Agent'}</div>
                       <div className="avatar-email">{session.user?.email}</div>
@@ -1239,6 +1305,49 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
           <div style={{ marginBottom: '2.5rem' }}>
             <div className="section-label">Your profile</div>
             <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.75rem' }}>
+
+              {/* ── PHOTO UPLOAD ── */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+                <div
+                  onClick={() => photoInputRef.current?.click()}
+                  style={{ width: '80px', height: '80px', borderRadius: '50%', flexShrink: 0, cursor: 'pointer', overflow: 'hidden', background: 'var(--sage-light)', border: '2px solid var(--sage-mid)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+                >
+                  {profile.photoUrl
+                    ? <img src={profile.photoUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: '1.8rem', fontFamily: "'Instrument Serif', serif", color: 'var(--sage)', fontWeight: '600' }}>
+                        {(profile.name || session?.user?.name || '?').charAt(0).toUpperCase()}
+                      </span>
+                  }
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity .2s', borderRadius: '50%' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                  >
+                    <span style={{ color: '#fff', fontSize: '11px', fontWeight: '600' }}>Change</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '.25rem' }}>Profile photo</div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '.5rem', lineHeight: '1.5' }}>
+                    Shown on your public agent page.<br />JPG or PNG, under 5MB.
+                  </div>
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={photoUploading}
+                    style={{ fontSize: '12px', background: 'none', border: '1px solid var(--sage-mid)', color: 'var(--sage)', borderRadius: '7px', padding: '.35rem .85rem', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: '500' }}
+                  >
+                    {photoUploading ? 'Uploading…' : profile.photoUrl ? 'Change photo' : 'Upload photo'}
+                  </button>
+                  {photoMsg && <div style={{ fontSize: '12px', marginTop: '.35rem', color: photoMsg.startsWith('✓') ? 'var(--sage)' : '#dc2626', fontWeight: '500' }}>{photoMsg}</div>}
+                </div>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={e => { if (e.target.files?.[0]) uploadPhoto(e.target.files[0]); e.target.value = ''; }}
+                />
+              </div>
+
               <div className="field-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Full name</label>
