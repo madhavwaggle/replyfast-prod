@@ -127,7 +127,7 @@ export default function App() {
   // Load leads whenever dashboard is shown
   useEffect(() => {
     if (view === 'dashboard') loadLeads();
-    if (['setup','profile'].includes(view)) loadProfile();
+    if (['setup','profile','integrations'].includes(view)) loadProfile();
     if (view === 'integrations') loadCreds();
     if (view === 'dashboard') loadChecklist();
   }, [view]);
@@ -1449,7 +1449,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
             ) : null;
 
             return (<>
-              <IntegCard icon="🏠" title="Zillow Premier Agent" badge="Email forwarding" status={false}
+              <IntegCard icon="🏠" title="Zillow Premier Agent" badge="Email forwarding" status={!!profile.zillowDone}
                 desc="Forward your Zillow lead notification emails to Say HelloLeads — no API key needed, just a one-time setting change."
                 link="https://premieragent.zillow.com" linkLabel="Open Zillow Premier Agent →"
               >
@@ -1479,7 +1479,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
               </IntegCard>
 
-              <IntegCard icon="🏡" title="Homes.com" badge="Email forwarding" status={false}
+              <IntegCard icon="🏡" title="Homes.com" badge="Email forwarding" status={!!profile.homesDone}
                 desc="Same process — forward Homes.com lead emails to your unique address."
                 link="https://homes.com" linkLabel="Open Homes.com portal →"
               >
@@ -1509,7 +1509,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
               </IntegCard>
 
-              <IntegCard icon="🔑" title="Realtor.com" badge="Email forwarding" status={false}
+              <IntegCard icon="🔑" title="Realtor.com" badge="Email forwarding" status={!!profile.realtorDone}
                 desc="Forward Realtor.com lead alerts to your Say HelloLeads address."
                 link="https://realtorpro.realtor.com" linkLabel="Open Realtor.com Pro →"
               >
@@ -1539,7 +1539,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
               </IntegCard>
 
-              <IntegCard icon="🏘️" title="Redfin" badge="Email forwarding" status={false}
+              <IntegCard icon="🏘️" title="Redfin" badge="Email forwarding" status={!!profile.redfinDone}
                 desc="Forward Redfin lead notification emails to Say HelloLeads — same simple process as Zillow and Homes.com."
                 link="https://redfin.com/agents" linkLabel="Open Redfin Partner Dashboard →"
               >
@@ -1569,7 +1569,7 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                 </div>
               </IntegCard>
 
-              <IntegCard icon="📘" title="Facebook & Instagram Ads" badge="Via Zapier" status={false}
+              <IntegCard icon="📘" title="Facebook & Instagram Ads" badge="Via Zapier" status={!!profile.facebookDone}
                 desc="Capture leads directly from your Facebook and Instagram ad campaigns — no manual checking required."
                 link="https://zapier.com/apps/facebook-lead-ads/integrations" linkLabel="Open Zapier → Facebook Lead Ads →"
               >
