@@ -68,6 +68,11 @@ export default function App() {
   const [credsMsg, setCredsMsg]     = useState({});
   // Onboarding checklist
   const [checklist, setChecklist]   = useState({ profile: false, zillow: false, sms: false, website: false });
+  // AI usage meter
+  const [aiUsage, setAiUsage]       = useState({ used: 0, cap: 300, month: '' });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeInterestSent, setUpgradeInterestSent] = useState(false);
+  const [upgradeInterestLoading, setUpgradeInterestLoading] = useState(false);
   const chatRef = useRef(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef(null);
@@ -127,10 +132,10 @@ export default function App() {
   // Load leads whenever dashboard is shown
   useEffect(() => {
     if (view === 'dashboard') loadLeads();
-    //if (['setup','profile'].includes(view)) loadProfile();
     if (['setup','profile','integrations'].includes(view)) loadProfile();
     if (view === 'integrations') loadCreds();
     if (view === 'dashboard') loadChecklist();
+    if (view === 'dashboard') loadAiUsage();
   }, [view]);
 
   async function loadProfile() {
@@ -260,6 +265,25 @@ export default function App() {
     } catch { setCredsMsg(m => ({ ...m, [field]: 'Save failed' })); }
     setCredsSaving(s => ({ ...s, [field]: false }));
     setTimeout(() => setCredsMsg(m => ({ ...m, [field]: '' })), 3000);
+  }
+
+  async function loadAiUsage() {
+    try {
+      const res = await fetch('/api/ai-usage');
+      if (res.ok) {
+        const data = await res.json();
+        setAiUsage({ used: data.used || 0, cap: data.cap || 300, month: data.month || '' });
+      }
+    } catch (e) { console.error('loadAiUsage:', e); }
+  }
+
+  async function submitUpgradeInterest() {
+    setUpgradeInterestLoading(true);
+    try {
+      await fetch('/api/upgrade-interest', { method: 'POST' });
+      setUpgradeInterestSent(true);
+    } catch (e) { console.error('upgradeInterest:', e); }
+    setUpgradeInterestLoading(false);
   }
 
   async function loadChecklist() {
@@ -1204,12 +1228,100 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
               ) : null;
             })()}
 
+            {/* AI USAGE METER */}
+            {(() => {
+              const { used, cap } = aiUsage;
+              const pct     = Math.min((used / cap) * 100, 100);
+              const isOver  = used >= cap;
+              const isWarn  = !isOver && pct >= 80;
+              const barColor = isOver ? '#c0392b' : isWarn ? '#e67e22' : '#4a7c59';
+              if (used === 0) return null; // hide until they have at least 1 response
+              return (
+                <div style={{ background: '#fff', border: `1.5px solid ${isOver ? '#f5c6c2' : isWarn ? '#fde8cc' : 'var(--border)'}`, borderRadius: '14px', padding: '1rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.4rem' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--black)' }}>
+                        {isOver ? '🚨 AI limit reached' : isWarn ? '⚠️ AI responses running low' : '🤖 AI responses this month'}
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: '500' }}>{used} / {cap}</span>
+                    </div>
+                    <div style={{ height: '6px', background: 'var(--border)', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: barColor, borderRadius: '99px', transition: 'width .4s ease' }} />
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '.4rem' }}>
+                      {isOver
+                        ? 'New leads are saved and you\'re still notified — AI replies are paused until next month.'
+                        : isWarn
+                        ? `${cap - used} responses remaining. Upgrade to Pro for unlimited AI replies.`
+                        : `Resets on the 1st of next month.`}
+                    </div>
+                  </div>
+                  {(isOver || isWarn) && (
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      style={{ background: barColor, color: '#fff', border: 'none', borderRadius: '8px', padding: '.5rem 1.1rem', fontSize: '13px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                    >
+                      Upgrade to Pro →
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="dash-kpis">
               <div className="kpi highlight"><div className="kpi-label">response time</div><div className="kpi-val">&lt;60s</div><div className="kpi-sub">vs 15hr industry avg</div></div>
               <div className="kpi"><div className="kpi-label">total leads</div><div className="kpi-val">{stats.total}</div><div className="kpi-sub">all time</div></div>
               <div className="kpi"><div className="kpi-label">hot leads</div><div className="kpi-val">{stats.hot}</div><div className="kpi-sub">need follow-up now</div></div>
               <div className="kpi"><div className="kpi-label">AI handled</div><div className="kpi-val">100%</div><div className="kpi-sub">first response</div></div>
             </div>
+
+            {/* UPGRADE MODAL */}
+            {showUpgradeModal && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+                onClick={e => { if (e.target === e.currentTarget) setShowUpgradeModal(false); }}>
+                <div style={{ background: '#fff', borderRadius: '18px', padding: '2rem', maxWidth: '440px', width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,.18)' }}>
+                  <div style={{ fontSize: '28px', marginBottom: '.5rem' }}>🚀</div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '.5rem', color: 'var(--black)' }}>Say HelloLeads Pro</div>
+                  <div style={{ fontSize: '14px', color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+                    You're getting real value out of your AI lead assistant. Upgrade to Pro and never worry about limits again.
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', marginBottom: '1.75rem' }}>
+                    {[
+                      '✅ Unlimited AI responses every month',
+                      '✅ HOT / WARM / COLD scoring on every lead',
+                      '✅ Instant SMS + email alerts',
+                      '✅ Priority support',
+                      '🔜 Team seats & multi-agent dashboard',
+                      '🔜 CRM integrations',
+                    ].map((f, i) => (
+                      <div key={i} style={{ fontSize: '14px', color: i < 4 ? 'var(--black)' : 'var(--muted)' }}>{f}</div>
+                    ))}
+                  </div>
+                  {upgradeInterestSent ? (
+                    <div style={{ background: '#eef4f0', borderRadius: '10px', padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '20px', marginBottom: '.25rem' }}>🎉</div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--sage)' }}>You're on the list!</div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '.25rem' }}>We'll reach out personally as soon as Pro launches.</div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={submitUpgradeInterest}
+                      disabled={upgradeInterestLoading}
+                      style={{ width: '100%', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.85rem', fontSize: '15px', fontWeight: '700', cursor: upgradeInterestLoading ? 'default' : 'pointer', opacity: upgradeInterestLoading ? .7 : 1 }}
+                    >
+                      {upgradeInterestLoading ? 'Saving…' : "I'm Interested in Pro →"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowUpgradeModal(false)}
+                    style={{ width: '100%', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '13px', marginTop: '.75rem', cursor: 'pointer', padding: '.25rem' }}
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </div>
+            )}
+
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem', marginBottom: '.75rem' }}>
               <div className="dash-section-title" style={{ margin: 0 }}>Active leads</div>
