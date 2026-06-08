@@ -127,7 +127,8 @@ export default function App() {
   // Load leads whenever dashboard is shown
   useEffect(() => {
     if (view === 'dashboard') loadLeads();
-    if (['setup','profile'].includes(view)) loadProfile();
+    //if (['setup','profile'].includes(view)) loadProfile();
+    if (['setup','profile','integrations'].includes(view)) loadProfile();
     if (view === 'integrations') loadCreds();
     if (view === 'dashboard') loadChecklist();
   }, [view]);
