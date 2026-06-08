@@ -7,7 +7,8 @@
 
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../lib/auth';
-import { updateUserProfile, getUserById } from '../../lib/users';
+import { updateUserProfile } from '../../lib/db';
+//import { updateUserProfile, getUserById } from '../../lib/users';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
