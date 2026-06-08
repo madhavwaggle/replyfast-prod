@@ -545,6 +545,12 @@ Continue qualifying (budget, timeline, pre-approval). Stay warm and brief (3 sen
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M12 2a10 10 0 0 1 7.07 2.93M4.93 4.93a10 10 0 0 0 0 14.14M12 22a10 10 0 0 1-7.07-2.93"/></svg>
                       Integrations
                     </button>
+                    <button className="avatar-item" onClick={() => { setHowItWorksOpen(true); setAvatarOpen(false); }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    How it works
+                    </button>
                     <div className="avatar-divider" />
                     <a className="avatar-item" href="mailto:support@sayhelloleads.com" onClick={() => setAvatarOpen(false)}
                       style={{ textDecoration: 'none', color: 'var(--black)' }}>
