@@ -7,29 +7,31 @@
 
 import { saveLead, getAllLeads } from '../../lib/db';
 import { getUserById } from '../../lib/users';
-import { notifyAgentNewLead } from '../../lib/notify';
+import { notifyAgentNewLead, notifyOwnerCapExceeded } from '../../lib/notify';
 import { getAgentConfig } from '../../lib/agentConfig';
 import { buildFirstResponsePrompt, buildScoringPrompt, parseScoreResponse } from '../../lib/aiPrompts';
 import { processReply, fallbackReply, validateScore } from '../../lib/guardrails';
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRedis } from '../../lib/redis';
-//import { notifyAgentNewLead } from '../../lib/notify';
 
 const AI_MONTHLY_CAP = 300; // per agent — raise once subscriptions are live
 
 async function checkAndIncrementAICap(agentId) {
   try {
     const store = await getRedis();
-    if (!store) return true; // no Redis in dev — allow
-    const month = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
+    if (!store) return { allowed: true, firstExceedance: false };
+    const month = new Date().toISOString().slice(0, 7);
     const key = `ai:usage:${agentId}:${month}`;
     const count = await store.incr(key);
-    if (count === 1) await store.expire(key, 60 * 60 * 24 * 35); // auto-expire after ~35 days
-    return count <= AI_MONTHLY_CAP;
+    if (count === 1) await store.expire(key, 60 * 60 * 24 * 35);
+    return {
+      allowed: count <= AI_MONTHLY_CAP,
+      firstExceedance: count === AI_MONTHLY_CAP + 1, // exactly one over = first time
+    };
   } catch (e) {
     console.error('AI cap check error:', e.message);
-    return true; // fail open — don't block leads if Redis has issues
+    return { allowed: true, firstExceedance: false };
   }
 }
 
@@ -92,7 +94,7 @@ export async function triggerAIResponse(lead, agent, cfg) {
   const anthropic  = new Anthropic({ apiKey: cfg.anthropicKey });
 
   // ── Monthly AI cap ─────────────────────────────────────────────────────
-  const withinCap = await checkAndIncrementAICap(lead.agentId);
+  const { allowed: withinCap, firstExceedance } = await checkAndIncrementAICap(lead.agentId);
   if (!withinCap) {
     console.warn(`[ai-cap] Agent ${lead.agentId} has exceeded ${AI_MONTHLY_CAP} AI responses this month — saving lead and notifying agent without AI.`);
     lead.score   = 'WARM';
@@ -102,6 +104,11 @@ export async function triggerAIResponse(lead, agent, cfg) {
     if (agentEmail) {
       await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
         .catch(e => console.error('[ai-cap] notify error:', e.message));
+    }
+    // Alert owner once — on the exact call that tips over the cap
+    if (firstExceedance) {
+      await notifyOwnerCapExceeded(agent || { id: lead.agentId })
+        .catch(e => console.error('[ai-cap] owner alert error:', e.message));
     }
     return;
   }
