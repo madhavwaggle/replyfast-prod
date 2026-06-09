@@ -73,6 +73,8 @@ export default function App() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeInterestSent, setUpgradeInterestSent] = useState(false);
   const [upgradeInterestLoading, setUpgradeInterestLoading] = useState(false);
+  // Welcome banner — shown to new users arriving from email verification
+  const [showWelcome, setShowWelcome] = useState(false);
   const chatRef = useRef(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef(null);
@@ -116,7 +118,15 @@ export default function App() {
     const qv = router.query?.view;
     const allowed = ['demo','dashboard','profile','integrations'];
     if (qv && allowed.includes(qv)) setView(qv);
-  }, [router.query?.view]);
+    // Show welcome banner for new users arriving from email verification
+    if (router.query?.welcome === '1') {
+      setShowWelcome(true);
+      const t = setTimeout(() => setShowWelcome(false), 8000);
+      // Clean the param from URL without reload
+      router.replace('/?view=dashboard', undefined, { shallow: true });
+      return () => clearTimeout(t);
+    }
+  }, [router.query?.view, router.query?.welcome]);
 
   // Close avatar dropdown on outside click
   useEffect(() => {
@@ -1236,7 +1246,28 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
           <div className="dash-body">
 
-            {/* ONBOARDING CHECKLIST — shown until all 4 steps done */}
+            {/* WELCOME BANNER — shown once for new users after email verification */}
+            {showWelcome && (
+              <div style={{ background: 'linear-gradient(135deg, #3d6b4a 0%, #2e5239 100%)', borderRadius: '14px', padding: '1.5rem 1.75rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', position: 'relative', animation: 'fadeUp .4s ease' }}>
+                <div style={{ fontSize: '2rem', flexShrink: 0 }}>🎉</div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginBottom: '.25rem' }}>
+                    Welcome to Say HelloLeads, {session?.user?.name?.split(' ')[0] || 'there'}!
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.8)', lineHeight: '1.5' }}>
+                    Your AI lead assistant is ready. Complete the setup steps below to start capturing and responding to leads automatically.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '.75rem', flexShrink: 0 }}>
+                  <button onClick={() => setView('integrations')} style={{ background: '#fff', color: '#3d6b4a', border: 'none', borderRadius: '8px', padding: '.5rem 1.1rem', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>
+                    Connect leads →
+                  </button>
+                  <button onClick={() => setShowWelcome(false)} style={{ background: 'transparent', color: 'rgba(255,255,255,.7)', border: '1px solid rgba(255,255,255,.3)', borderRadius: '8px', padding: '.5rem .75rem', fontSize: '13px', cursor: 'pointer' }}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
             {(!checklist.profile || !checklist.zillow) && (
               <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '1rem', color: 'var(--black)' }}>
@@ -2168,6 +2199,7 @@ const GLOBAL_CSS = `
   body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--black); min-height: 100vh; font-size: 15px; line-height: 1.6; }
   .fade-in { animation: fadeIn .4s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 
   nav { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 2.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--white); z-index:100; flex-wrap:wrap; gap:.75rem; }
   .logo { font-family:'Instrument Serif',serif; font-size:1.5rem; letter-spacing:-.01em; }
