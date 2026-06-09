@@ -1,0 +1,130 @@
+/**
+ * components/Footer.jsx
+ * Site-wide footer. Import and drop in wherever needed.
+ * Matches the index.js design system: DM Sans, sage green, cream palette.
+ */
+
+export default function Footer({ onHowItWorks }) {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer style={{
+      borderTop: '1px solid #e0ddd8',
+      background: '#f5f3ee',
+      padding: '3rem 2rem 2rem',
+      marginTop: 'auto',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      <div style={{
+        maxWidth: '1000px',
+        margin: '0 auto',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '2.5rem',
+        marginBottom: '2.5rem',
+      }}>
+
+        {/* ── Column 1: Brand ── */}
+        <div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0a0a0a', marginBottom: '.4rem', letterSpacing: '-.3px' }}>
+            Say <span style={{ color: '#4a6741' }}>HelloLeads</span>
+          </div>
+          <p style={{ fontSize: '13px', color: '#6b6b6b', lineHeight: '1.6', margin: '0 0 1rem' }}>
+            Respond to every lead in 60 seconds.<br />Know who to call first.
+          </p>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '11px',
+            color: '#6b6b6b',
+            background: '#fff',
+            border: '1px solid #e0ddd8',
+            borderRadius: '6px',
+            padding: '4px 8px',
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#4a6741" strokeWidth="1.5" fill="none"/>
+              <path d="M12 22V12M3 7l9 5 9-5" stroke="#4a6741" strokeWidth="1.5"/>
+            </svg>
+            Powered by Anthropic
+          </div>
+        </div>
+
+        {/* ── Column 2: Product ── */}
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6b6b6b', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
+            Product
+          </div>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
+            <FooterLink href="/">Home</FooterLink>
+            {onHowItWorks
+              ? <button onClick={onHowItWorks} style={linkBtnStyle}>How it works</button>
+              : <FooterLink href="/">How it works</FooterLink>
+            }
+            <FooterLink href="/register">Sign up free</FooterLink>
+            <FooterLink href="/login">Sign in</FooterLink>
+          </nav>
+        </div>
+
+        {/* ── Column 3: Legal ── */}
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6b6b6b', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
+            Legal & Support
+          </div>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
+            <FooterLink href="/privacy">Privacy policy</FooterLink>
+            <FooterLink href="/terms">Terms of service</FooterLink>
+            <FooterLink href="mailto:hello@sayhelloleads.com">Contact us</FooterLink>
+          </nav>
+        </div>
+
+      </div>
+
+      {/* Bottom bar */}
+      <div style={{
+        borderTop: '1px solid #e0ddd8',
+        paddingTop: '1.25rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '.5rem',
+      }}>
+        <span style={{ fontSize: '12px', color: '#6b6b6b' }}>
+          © {year} Say HelloLeads. All rights reserved.
+        </span>
+        <span style={{ fontSize: '12px', color: '#6b6b6b' }}>
+          Built for real estate agents who move fast.
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+function FooterLink({ href, children }) {
+  return (
+    <a href={href} style={{
+      fontSize: '13px',
+      color: '#6b6b6b',
+      textDecoration: 'none',
+      transition: 'color .15s',
+    }}
+    onMouseEnter={e => e.target.style.color = '#4a6741'}
+    onMouseLeave={e => e.target.style.color = '#6b6b6b'}
+    >
+      {children}
+    </a>
+  );
+}
+
+const linkBtnStyle = {
+  fontSize: '13px',
+  color: '#6b6b6b',
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  fontFamily: "'DM Sans', sans-serif",
+  textAlign: 'left',
+};
