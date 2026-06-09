@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       sendWelcomeEmail({ email: user.email, name: user.name, agentSlug: slug }).catch(console.error);
     }
 
-    return res.redirect('/verify-email?success=1');
+    return res.redirect('/login?new=1');
   }
 
   // ── RESEND ────────────────────────────────────────────────────────────────
