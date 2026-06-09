@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Footer from '../components/Footer';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import AddressAutocomplete from '../components/AddressAutocomplete';
@@ -1913,6 +1914,11 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
       {/* HOW IT WORKS MODAL */}
       {howItWorksOpen && <HowItWorksModal onClose={() => setHowItWorksOpen(false)} />}
+
+      {/* FOOTER — shown on landing, login, register, and public views */}
+      {['landing', 'demo'].includes(view) && (
+        <Footer onHowItWorks={() => setHowItWorksOpen(true)} />
+      )}
 
    </>
   );
