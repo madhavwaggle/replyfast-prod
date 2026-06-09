@@ -29,26 +29,9 @@ export default function Footer({ onHowItWorks }) {
           <div style={{ fontSize: '18px', fontWeight: '700', color: '#0a0a0a', marginBottom: '.4rem', letterSpacing: '-.3px' }}>
             Say <span style={{ color: '#4a6741' }}>HelloLeads</span>
           </div>
-          <p style={{ fontSize: '13px', color: '#6b6b6b', lineHeight: '1.6', margin: '0 0 1rem' }}>
+          <p style={{ fontSize: '13px', color: '#6b6b6b', lineHeight: '1.6', margin: '0' }}>
             Respond to every lead in 60 seconds.<br />Know who to call first.
           </p>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '11px',
-            color: '#6b6b6b',
-            background: '#fff',
-            border: '1px solid #e0ddd8',
-            borderRadius: '6px',
-            padding: '4px 8px',
-          }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#4a6741" strokeWidth="1.5" fill="none"/>
-              <path d="M12 22V12M3 7l9 5 9-5" stroke="#4a6741" strokeWidth="1.5"/>
-            </svg>
-            Powered by Anthropic
-          </div>
         </div>
 
         {/* ── Column 2: Product ── */}
