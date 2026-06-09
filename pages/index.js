@@ -609,6 +609,7 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
         <div className="logo">Say <span>HelloLeads</span></div>
         <div className="nav-links">
           <a onClick={() => setView('landing')}>Home</a>
+          {!session && <a onClick={() => setHowItWorksOpen(true)} style={{ cursor: 'pointer' }}>How it works</a>}
           {session && <a onClick={() => setView('dashboard')}>Dashboard</a>}
           {session ? (
             <div className="nav-avatar-wrap" ref={avatarRef}>
