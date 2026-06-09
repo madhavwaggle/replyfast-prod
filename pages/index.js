@@ -959,12 +959,8 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
             </div>
             <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="maria@email.com" /></div>
             <div className="field">
-              <label>Phone (optional — for SMS demo)</label>
+              <label>Phone (optional)</label>
               <input type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" />
-              <div className="sms-toggle">
-                <input type="checkbox" id="sms-chk" checked={form.wantsSms} onChange={e => setForm(f => ({...f, wantsSms: e.target.checked}))} />
-                <label htmlFor="sms-chk">Send real SMS (requires Twilio setup)</label>
-              </div>
             </div>
             <div className="field">
               <label>Property they inquired about</label>
