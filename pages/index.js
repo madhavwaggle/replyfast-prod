@@ -73,6 +73,11 @@ export default function App() {
   const [aiUsage, setAiUsage]       = useState({ used: 0, cap: 100, month: '' });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeInterestSent, setUpgradeInterestSent] = useState(false);
+  // Waitlist modal for Team / Brokerage plans
+  const [waitlistPlan, setWaitlistPlan]   = useState(null); // 'team' | 'brokerage'
+  const [waitlistForm, setWaitlistForm]   = useState({ name: '', email: '', agencyName: '' });
+  const [waitlistSent, setWaitlistSent]   = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
   const [upgradeInterestLoading, setUpgradeInterestLoading] = useState(false);
   // Welcome banner — shown to new users arriving from email verification
   const [showWelcome, setShowWelcome] = useState(false);
@@ -286,6 +291,20 @@ export default function App() {
         setAiUsage({ used: data.used || 0, cap: data.cap || 100, month: data.month || '' });
       }
     } catch (e) { console.error('loadAiUsage:', e); }
+  }
+
+  async function submitWaitlist() {
+    if (!waitlistForm.email) return;
+    setWaitlistLoading(true);
+    try {
+      await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: waitlistPlan, ...waitlistForm }),
+      });
+      setWaitlistSent(true);
+    } catch (e) { console.error('waitlist error:', e); }
+    setWaitlistLoading(false);
   }
 
   async function submitUpgradeInterest() {
@@ -1021,22 +1040,23 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
                 
                     {/* BUTTON */}
                     <button
-                      disabled={plan.comingSoon}
                       onClick={() => {
                         if (plan.comingSoon) {
-                          router.push(`/waitlist?plan=${plan.name.toLowerCase()}`)
+                          setWaitlistPlan(plan.name.toLowerCase());
+                          setWaitlistSent(false);
+                          setWaitlistForm({ name: '', email: '', agencyName: '' });
                         } else {
-                          router.push('/register')
+                          router.push('/register');
                         }
                       }}
                       style={{
                         width: '100%',
                         marginTop: '1.25rem',
                         background: plan.comingSoon
-                          ? '#e5e5e5'
+                          ? 'var(--sage)'
                           : (plan.highlight ? '#fff' : 'var(--sage)'),
                         color: plan.comingSoon
-                          ? '#888'
+                          ? '#fff'
                           : (plan.highlight ? 'var(--sage)' : '#fff'),
                         border: 'none',
                         borderRadius: '8px',
@@ -1044,10 +1064,11 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
                         fontSize: '14px',
                         fontFamily: "'DM Sans', sans-serif",
                         fontWeight: '600',
-                        cursor: plan.comingSoon ? 'not-allowed' : 'pointer'
+                        cursor: 'pointer',
+                        opacity: 1,
                       }}
                     >
-                      {plan.comingSoon ? 'Join waitlist' : 'Get started →'}
+                      {plan.comingSoon ? 'Join waitlist →' : 'Get started →'}
                     </button>
                   </div>
                 ))}
@@ -1069,43 +1090,73 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
       {/* DEMO FORM */}
       {view === 'demo' && (
-        <section className="fade-in" style={{ maxWidth: '560px', margin: '3rem auto', padding: '0 1.5rem 4rem' }}>
-          <a className="back-link" onClick={() => setView('landing')}>← Back</a>
-          <div className="demo-header">
-            <h2>See it from a buyer's side</h2>
-            <p>Enter a fake lead below and watch how your page responds — exactly what a real buyer would experience.</p>
-          </div>
-          <div className="form-card">
-            <h3>Fake buyer inquiry <span className="tag">you're the agent</span></h3>
-            <div className="field-row">
-              <div className="field"><label>First name</label><input value={form.fname} onChange={e => setForm(f => ({...f, fname: e.target.value}))} placeholder="e.g. Maria" /></div>
-              <div className="field"><label>Last name</label><input value={form.lname} onChange={e => setForm(f => ({...f, lname: e.target.value}))} placeholder="e.g. Chen" /></div>
-            </div>
-            <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="maria@email.com" /></div>
-            <div className="field">
-              <label>Phone (optional)</label>
-              <input type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" />
-            </div>
-            <div className="field">
-              <label>Property they inquired about</label>
-              <AddressAutocomplete
-                value={form.property}
-                onChange={val => setForm(f => ({...f, property: val}))}
-                placeholder="e.g. 412 Elm Street, 3BR in Hyde Park"
-                className="setup-input"
-              />
-            </div>
-            <div className="field"><label>Their message</label><textarea value={form.message} onChange={e => setForm(f => ({...f, message: e.target.value}))} /></div>
-            <div className="field"><label>Lead source</label>
-              <select value={form.source} onChange={e => setForm(f => ({...f, source: e.target.value}))}>
-                {['Zillow','Homes.com','Realtor.com','Website','Referral','Sign call','Text message'].map(s => <option key={s}>{s}</option>)}
-              </select>
+        <section className="fade-in" style={{ background: 'var(--bg, #f9fafb)', minHeight: '100vh' }}>
+
+          {/* Demo top bar — matches agent page style */}
+          <div style={{ background: '#fff', borderBottom: '1px solid var(--border)', padding: '.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontWeight: '600', fontSize: '15px' }}>Anna Williams</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>TeamAnna</span>
+              <span style={{ background: 'var(--sage)', color: '#fff', fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '20px', letterSpacing: '.04em' }}>DEMO</span>
             </div>
           </div>
-          <button className="submit-btn" disabled={submitting} onClick={submitLead}>
-            {submitting ? 'Connecting…' : 'See what your buyer experiences →'}
-          </button>
-          <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>This is a preview only. Use a fake name — you're seeing exactly what a real buyer would see on your page.</p>
+
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
+
+            {/* Agent header — matches agent page exactly */}
+            <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+              <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--sage)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '600', margin: '0 auto 1rem', fontFamily: "'Instrument Serif', serif" }}>
+                A
+              </div>
+              <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '1.75rem', marginBottom: '.2rem' }}>Anna Williams</h1>
+              <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '.4rem' }}>TeamAnna</p>
+              <p style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6' }}>Say hi — I'll reply right away.</p>
+              {/* Demo badge */}
+              <div style={{ display: 'inline-block', marginTop: '.75rem', background: '#fff8e6', border: '1px solid #f0d080', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', color: '#8a6800' }}>
+                🎭 This is a demo — enter a fake buyer inquiry below and see exactly what a real buyer experiences
+              </div>
+            </div>
+
+            {/* Form card — matches agent page style */}
+            <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '1.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '.9rem' }}>
+                <div><label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>First name *</label><input value={form.fname} onChange={e => setForm(f => ({...f, fname: e.target.value}))} placeholder="e.g. Maria" style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} /></div>
+                <div><label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Last name</label><input value={form.lname} onChange={e => setForm(f => ({...f, lname: e.target.value}))} placeholder="e.g. Chen" style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} /></div>
+              </div>
+              <div style={{ marginBottom: '.9rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Email *</label>
+                <input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} placeholder="maria@email.com" style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+              </div>
+              <div style={{ marginBottom: '.9rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Phone <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
+                <input type="tel" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+              </div>
+              <div style={{ marginBottom: '.9rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Property you're interested in</label>
+                <AddressAutocomplete value={form.property} onChange={val => setForm(f => ({...f, property: val}))} placeholder="e.g. 412 Elm Street, 3BR in Hyde Park" className="setup-input" />
+              </div>
+              <div style={{ marginBottom: '.9rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>Your message</label>
+                <textarea value={form.message} onChange={e => setForm(f => ({...f, message: e.target.value}))} placeholder={`Hi Anna, I'm interested in...`} rows={3} style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none', resize: 'vertical' }} />
+              </div>
+              <div style={{ marginBottom: '.5rem' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '.35rem' }}>How did you hear about Anna?</label>
+                <select value={form.source} onChange={e => setForm(f => ({...f, source: e.target.value}))} style={{ width: '100%', padding: '.65rem .9rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '14px', outline: 'none', background: '#fff' }}>
+                  {['Agent Website','Zillow','Homes.com','Realtor.com','Website','Referral','Sign call','Text message'].map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <button className="submit-btn" disabled={submitting} onClick={submitLead} style={{ marginTop: '1.25rem' }}>
+              {submitting ? 'Connecting…' : 'Message Anna →'}
+            </button>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center', marginTop: '.75rem' }}>
+              Your info is only shared with Anna Williams · TeamAnna. No spam, ever.
+            </p>
+            <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', marginTop: '.35rem' }}>
+              <a onClick={() => setView('landing')} style={{ color: 'var(--muted)', cursor: 'pointer', textDecoration: 'underline' }}>← Back to Say HelloLeads</a>
+            </p>
+          </div>
         </section>
       )}
 
@@ -1198,7 +1249,7 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
             {/* Sticky CTA banner */}
             <div style={{ background: 'var(--sage)', color: '#fff', padding: '.85rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem', position: 'sticky', top: 0, zIndex: 50 }}>
               <div>
-                <span style={{ fontWeight: '600', fontSize: '14px' }}>You're viewing a demo dashboard</span>
+                <span style={{ fontWeight: '600', fontSize: '14px' }}>You're viewing Anna Williams' demo dashboard</span>
                 <span style={{ fontSize: '13px', opacity: .85, marginLeft: '.75rem' }}>Your real leads will appear here once you sign up.</span>
               </div>
               <button
@@ -1210,7 +1261,10 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
             </div>
 
             <div className="dash-nav">
-              <h2>Agent dashboard <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--muted)', marginLeft: '.5rem' }}>— demo preview</span></h2>
+              <div>
+                <h2 style={{ display: 'inline' }}>Anna Williams <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: '400', fontSize: '15px', color: 'var(--muted)' }}>· TeamAnna</span></h2>
+                <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--muted)', marginLeft: '.5rem' }}>— demo dashboard</span>
+              </div>
               <div className="dash-nav-right">
                 <div className="live-badge"><div className="live-dot" /> Live</div>
                 {/* Blurred locked buttons */}
@@ -2037,6 +2091,63 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
       {/* HOW IT WORKS MODAL */}
       {howItWorksOpen && <HowItWorksModal onClose={() => setHowItWorksOpen(false)} />}
+
+      {/* WAITLIST MODAL */}
+      {waitlistPlan && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget) { setWaitlistPlan(null); } }}>
+          <div style={{ background: '#fff', borderRadius: '18px', padding: '2rem', maxWidth: '420px', width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,.18)' }}>
+            {waitlistSent ? (
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '.75rem' }}>🎉</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '.5rem' }}>You're on the list!</div>
+                <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                  We'll reach out personally when the {waitlistPlan.charAt(0).toUpperCase() + waitlistPlan.slice(1)} plan launches. Expect to hear from us soon.
+                </div>
+                <button onClick={() => setWaitlistPlan(null)} style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.75rem 2rem', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.4rem' }}>
+                    {waitlistPlan?.charAt(0).toUpperCase()}{waitlistPlan?.slice(1)} Plan — Coming Soon
+                  </div>
+                  <div style={{ fontSize: '20px', fontWeight: '700', marginBottom: '.4rem' }}>Join the waitlist</div>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                    Be first to know when it launches. We'll reach out personally with early access and founding member pricing.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', marginBottom: '1.25rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '.3rem', color: 'var(--muted)' }}>Your name</label>
+                    <input value={waitlistForm.name} onChange={e => setWaitlistForm(f => ({...f, name: e.target.value}))} placeholder="Maria Chen" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '.3rem', color: 'var(--muted)' }}>Email *</label>
+                    <input type="email" value={waitlistForm.email} onChange={e => setWaitlistForm(f => ({...f, email: e.target.value}))} placeholder="maria@yourrealty.com" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '.3rem', color: 'var(--muted)' }}>Brokerage or agency name</label>
+                    <input value={waitlistForm.agencyName} onChange={e => setWaitlistForm(f => ({...f, agencyName: e.target.value}))} placeholder="Hyde Park Realty" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                </div>
+                <button
+                  onClick={submitWaitlist}
+                  disabled={waitlistLoading || !waitlistForm.email}
+                  style={{ width: '100%', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.85rem', fontSize: '15px', fontWeight: '700', cursor: !waitlistForm.email || waitlistLoading ? 'default' : 'pointer', opacity: !waitlistForm.email || waitlistLoading ? .6 : 1 }}
+                >
+                  {waitlistLoading ? 'Saving…' : 'Count me in →'}
+                </button>
+                <button onClick={() => setWaitlistPlan(null)} style={{ width: '100%', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '13px', marginTop: '.65rem', cursor: 'pointer', padding: '.25rem' }}>
+                  Maybe later
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* FOOTER — shown on landing, login, register, and public views */}
       {['landing', 'demo'].includes(view) && (
