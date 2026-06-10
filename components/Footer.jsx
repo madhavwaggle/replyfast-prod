@@ -22,6 +22,7 @@ export default function Footer({ onHowItWorks }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '2.5rem',
         marginBottom: '2.5rem',
+        background: 'transparent'
       }}>
 
         {/* ── Column 1: Brand ── */}
