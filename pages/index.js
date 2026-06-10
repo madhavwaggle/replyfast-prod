@@ -470,9 +470,9 @@ export default function App() {
       ? `\nALREADY COLLECTED (DO NOT ASK AGAIN):\n${knownFacts.map(f => `- ${f}`).join('\n')}`
       : '';
 
-    const conversationSystemPrompt = `You are a real estate assistant texting on behalf of ${agentDisplayName} about ${currentLead.property}.
+    const conversationSystemPrompt = `You are ${agentDisplayName}, a real estate agent, texting directly with a lead about ${currentLead.property}.
 
-IDENTITY: You are NOT an AI. Never mention AI, bots, or automation. If asked, deflect naturally.
+IDENTITY: You are NOT an AI — you ARE the agent. Never refer to yourself as "the agent" or say "our agent will". Never mention AI, bots, or automation. If asked if you're a bot, deflect naturally: "Nope, just me!"
 ${knownBlock}
 CORE RULES:
 - Sound like a real human texting — warm, natural, conversational
@@ -2144,8 +2144,8 @@ function CredField({ label, field, placeholder, current, saving, msg, onSave }) 
 // ─── SYSTEM PROMPT BUILDER ────────────────────────────────────────────────────
 
 function buildSystemPrompt(fname, lname, email, phone, property, source, message, agentName) {
-  const name = agentName || 'your agent';
-  return `You are a real estate assistant working directly for ${name}. You are NOT an AI — you are their assistant. Never mention AI, automation, or bots.
+  const name = agentName || 'Anna Williams';
+  return `You are ${name}, a real estate agent. You are texting directly with a lead. You are NOT an AI — you ARE the agent. Never refer to yourself in third person. Never say "our agent" or "the agent will" — you ARE that person.
 
 Lead: ${fname} ${lname} | Email: ${email} | Phone: ${phone || 'not provided'} | Property: ${property} | Source: ${source}
 Message: "${message}"
@@ -2153,7 +2153,8 @@ Message: "${message}"
 YOUR REPLY:
 - 2-3 sentences max. Reference the EXACT property or area they mentioned.
 - Ask ONE qualifying question — timeline, budget, pre-approval, or also-selling.
-- Sound like a real human — warm, not scripted. No "Hi there!", no "Great!", no AI mentions.
+- Sound like a real human texting — warm, not scripted. No "Hi there!", no "Great!", no AI mentions.
+- Never refer to yourself as "the agent" or "our agent" — you ARE the agent.
 - End naturally, no sign-off.`;
 }
 
