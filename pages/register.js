@@ -6,6 +6,7 @@ import Head from 'next/head';
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '', agencyName: '' });
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -15,11 +16,16 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    if (!agreed) {
+      setError('Please agree to the Terms of Service and Privacy Policy to continue.');
+      setLoading(false);
+      return;
+    }
 
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, agreedToTermsAt: agreed ? new Date().toISOString() : null }),
     });
     const data = await res.json();
 
@@ -108,10 +114,26 @@ export default function RegisterPage() {
               </div>
             )}
 
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '.6rem', marginBottom: '1.25rem' }}>
+              <input
+                type="checkbox"
+                id="agree-terms"
+                checked={agreed}
+                onChange={e => setAgreed(e.target.checked)}
+                style={{ width: '16px', height: '16px', marginTop: '2px', accentColor: 'var(--sage)', flexShrink: 0, cursor: 'pointer' }}
+              />
+              <label htmlFor="agree-terms" style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5', cursor: 'pointer', margin: 0, fontWeight: 400 }}>
+                I agree to the{' '}
+                <a href="/terms" target="_blank" style={{ color: 'var(--sage)', textDecoration: 'none', fontWeight: '500' }}>Terms of Service</a>
+                {' '}and{' '}
+                <a href="/privacy" target="_blank" style={{ color: 'var(--sage)', textDecoration: 'none', fontWeight: '500' }}>Privacy Policy</a>
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
-              style={{ width: '100%', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.8rem', fontSize: '15px', fontFamily: 'inherit', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1 }}
+              disabled={loading || !agreed}
+              style={{ width: '100%', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.8rem', fontSize: '15px', fontFamily: 'inherit', fontWeight: '600', cursor: (loading || !agreed) ? 'not-allowed' : 'pointer', opacity: (loading || !agreed) ? .7 : 1 }}
             >
               {loading ? 'Creating account…' : 'Create account →'}
             </button>
