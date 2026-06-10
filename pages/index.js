@@ -905,8 +905,8 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 {[
                   { name: 'Solo Agent', price: '$79', period: '/mo', features: ['1 agent', 'Unlimited leads', 'AI responses + scoring', 'Email alerts', 'Zillow + SMS + Website'], highlight: false },
-                  { name: 'Team', price: '$199', period: '/mo', features: ['Up to 5 agents', 'Everything in Solo', 'Team dashboard', 'Priority support', 'Onboarding call'], highlight: true },
-                  { name: 'Brokerage', price: '$499', period: '/mo', features: ['Unlimited agents', 'Everything in Team', 'Custom branding', 'API access', 'Dedicated support'], highlight: false },
+                  { name: 'Team', price: '$299', period: '/mo', features: ['Up to 5 agents', 'Everything in Solo', 'Team dashboard', 'Priority support', 'Onboarding call'], highlight: true },
+                  { name: 'Brokerage', price: '$999', period: '/mo', features: ['Up to 20 agents', 'Everything in Team', 'Custom branding', 'API access', 'Dedicated support'], highlight: false },
                 ].map(plan => (
                   <div key={plan.name} style={{
                     background: plan.highlight ? 'var(--sage)' : 'var(--white)',
