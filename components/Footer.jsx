@@ -41,10 +41,7 @@ export default function Footer({ onHowItWorks }) {
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
             <FooterLink href="/">Home</FooterLink>
-            {onHowItWorks
-              ? <button onClick={onHowItWorks} style={linkBtnStyle}>How it works</button>
-              : <FooterLink href="/">How it works</FooterLink>
-            }
+            <FooterLink href="/">How it works</FooterLink>
             <FooterLink href="/register">Sign up free</FooterLink>
             <FooterLink href="/login">Sign in</FooterLink>
           </nav>
