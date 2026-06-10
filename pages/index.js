@@ -605,8 +605,12 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
           <meta property="og:title" content="Say HelloLeads — Respond to every lead in 60 seconds" />
           <meta property="og:description" content="Leads respond because they think they're texting you" />
           <meta property="og:image" content="https://sayhelloleads.com/preview.png" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:type" content="image/png" />
           <meta property="og:url" content="https://sayhelloleads.com" />
           <meta property="og:type" content="website" />
+          <meta property="og:site_name" content="Say HelloLeads" />
           
           {/* Twitter (also used by iMessage sometimes) */}
           <meta name="twitter:card" content="summary_large_image" />
