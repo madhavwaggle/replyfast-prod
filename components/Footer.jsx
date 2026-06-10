@@ -35,11 +35,11 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 2: Product ── */}
-        <div>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6b6b6b', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
+        <div style={{ background: 'transparent' }}>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Product
           </div>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
             <FooterLink href="/">Home</FooterLink>
             {onHowItWorks
               ? <button onClick={onHowItWorks} style={linkBtnStyle}>How it works</button>
@@ -51,11 +51,11 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 3: Legal ── */}
-        <div>
-          <div style={{ fontSize: '11px', fontWeight: '600', color: '#6b6b6b', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
+        <div style={{ background: 'transparent' }}>
+          <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Legal & Support
           </div>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.55rem' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
             <FooterLink href="/privacy">Privacy policy</FooterLink>
             <FooterLink href="/terms">Terms of service</FooterLink>
             <FooterLink href="mailto:hello@sayhelloleads.com">Contact us</FooterLink>
@@ -88,13 +88,14 @@ export default function Footer({ onHowItWorks }) {
 function FooterLink({ href, children }) {
   return (
     <a href={href} style={{
-      fontSize: '13px',
-      color: '#6b6b6b',
+      fontSize: '14px',
+      color: '#3d3d3a',
       textDecoration: 'none',
       transition: 'color .15s',
+      fontWeight: '400',
     }}
     onMouseEnter={e => e.target.style.color = '#4a6741'}
-    onMouseLeave={e => e.target.style.color = '#6b6b6b'}
+    onMouseLeave={e => e.target.style.color = '#3d3d3a'}
     >
       {children}
     </a>
@@ -102,12 +103,13 @@ function FooterLink({ href, children }) {
 }
 
 const linkBtnStyle = {
-  fontSize: '13px',
-  color: '#6b6b6b',
+  fontSize: '14px',
+  color: '#3d3d3a',
   background: 'none',
   border: 'none',
   padding: 0,
   cursor: 'pointer',
   fontFamily: "'DM Sans', sans-serif",
   textAlign: 'left',
+  fontWeight: '400',
 };
