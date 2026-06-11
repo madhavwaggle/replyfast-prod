@@ -98,7 +98,7 @@ export default async function handler(req, res) {
   await saveLead(lead);
 
   // ── Notify the agent (same as any other new lead) ─────────────────────────
-  // This replaces the triggerAIResponse call — we notify the agent without
+  // This replaces the triggerAIResponse call — we notify the agent without.
   // sending a second AI message to the buyer.
   if (agentEmail && process.env.RESEND_API_KEY) {
     notifyAgentNewLead(lead, agentEmail, agentName, process.env.RESEND_API_KEY)
