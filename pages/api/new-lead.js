@@ -182,8 +182,16 @@ export async function triggerAIResponse(lead, agent, cfg) {
     if (finalReply && lead.email && cfg.postmarkToken) {
       try {
         const { ServerClient } = await import('postmark');
+        // Use the inbound address as From so replies route back through Postmark automatically.
+        // The agent's display name is preserved — the customer sees "Jane Smith" not the raw address.
+        // If agent has a custom emailFrom like "Jane Smith <abc@sayhelloleads.com>", extract just
+        // the display name and pair it with the inbound address.
+        // Use the agent's display name from their Profile (set by agent, not a credential)
+        // Falls back to their full name if not set.
+        const displayName = cfg.displayName || agentName;
+        const inboundFrom = `${displayName} <${lead.agentId}@inbound.sayhelloleads.com>`;
         await new ServerClient(cfg.postmarkToken).sendEmail({
-          From:     cfg.emailFrom || `${agentName} <noreply@sayhelloleads.com>`,
+          From:     inboundFrom,
           ReplyTo:  `${lead.agentId}@inbound.sayhelloleads.com`,
           To:       lead.email,
           Subject:  `Re: ${lead.property}`,
