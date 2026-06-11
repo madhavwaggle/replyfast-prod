@@ -10,7 +10,7 @@ import { getUserById } from '../../../lib/users';
 import { getAgentConfig } from '../../../lib/agentConfig';
 import { buildConversationPrompt, buildScoringPrompt, parseScoreResponse } from '../../../lib/aiPrompts';
 import { processReply, fallbackReply, validateScore } from '../../../lib/guardrails';
-import { notifyAgentNewLead } from '../../../lib/notify';
+import { notifyAgentNewLead, detectCallIntent, notifyAgentCallRequest } from '../../../lib/notify';
 import Anthropic from '@anthropic-ai/sdk';
 import { getRedis } from '../../../lib/redis';
 
@@ -107,6 +107,20 @@ export default async function handler(req, res) {
   }
 
   lead.messages.push({ role: 'ai', text: reply });
+
+  // ── Call intent detection — force HOT + urgent agent alert ─────────────
+  if (detectCallIntent(message)) {
+    lead.score = 'HOT';
+    lead.confidence = 'high';
+    lead.nextAction = `${lead.fname || 'Lead'} asked to be called at ${lead.phone || 'their number'}. Call within the hour.`;
+    if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
+    const agentEmail = agent?.notifyEmail || agent?.email;
+    const agentName  = (agent?.name && agent.name.trim()) ? agent.name.trim() : 'your agent';
+    if (agentEmail) {
+      notifyAgentCallRequest(lead, agentEmail, agentName, cfg.resendKey)
+        .catch(e => console.error('[chat] call alert error:', e.message));
+    }
+  }
 
   // Score on first message, then re-score every 2 after that
   const buyerMessageCount = lead.messages.filter(m => m.role === 'lead').length;
