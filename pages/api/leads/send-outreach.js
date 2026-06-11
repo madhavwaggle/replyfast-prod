@@ -8,10 +8,10 @@
  * conversation loop as Zillow/Homes.com leads.
  */
 import { getServerSession }   from 'next-auth/next';
-import { authOptions }        from '../../lib/auth';
-import { getLead, saveLead }  from '../../lib/db';
-import { getUserById }        from '../../lib/users';
-import { getAgentConfig }     from '../../lib/agentConfig';
+import { authOptions }        from '../../../lib/auth';
+import { getLead, saveLead }  from '../../../lib/db';
+import { getUserById }        from '../../../lib/users';
+import { getAgentConfig }     from '../../../lib/agentConfig';
 import { triggerAIResponse }  from '../new-lead';
 
 export default async function handler(req, res) {
