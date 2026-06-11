@@ -78,6 +78,11 @@ export default function App() {
   const [waitlistForm, setWaitlistForm]   = useState({ name: '', email: '', agencyName: '' });
   const [waitlistSent, setWaitlistSent]   = useState(false);
   const [waitlistLoading, setWaitlistLoading] = useState(false);
+  // Manual lead entry
+  const [showManualLead, setShowManualLead]     = useState(false);
+  const [manualForm, setManualForm]             = useState({ fname: '', lname: '', email: '', phone: '', property: '', note: '', source: 'Referral' });
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [manualResult, setManualResult]         = useState(null); // { lead, suggestedOutreach }
   const [upgradeInterestLoading, setUpgradeInterestLoading] = useState(false);
   // Welcome banner — shown to new users arriving from email verification
   const [showWelcome, setShowWelcome] = useState(false);
@@ -291,6 +296,30 @@ export default function App() {
         setAiUsage({ used: data.used || 0, cap: data.cap || 100, month: data.month || '' });
       }
     } catch (e) { console.error('loadAiUsage:', e); }
+  }
+
+  async function submitManualLead() {
+    if (!manualForm.fname) return;
+    if (!manualForm.email && !manualForm.phone) return;
+    setManualSubmitting(true);
+    setManualResult(null);
+    try {
+      const res = await fetch('/api/leads/manual', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(manualForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setManualResult(data);
+        // Reload leads so new lead appears in dashboard
+        loadLeads();
+        loadChecklist();
+      } else {
+        console.error('Manual lead error:', data.error);
+      }
+    } catch (e) { console.error('submitManualLead:', e); }
+    setManualSubmitting(false);
   }
 
   async function submitWaitlist() {
@@ -1592,10 +1621,18 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem', marginBottom: '.75rem' }}>
               <div className="dash-section-title" style={{ margin: 0 }}>Active leads</div>
-              <div className="filter-row">
-                {[['all','All'],['HOT','🔥 Hot'],['WARM','🌤 Warm'],['COLD','❄️ Cold']].map(([f,l]) => (
-                  <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{l}</button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                <button
+                  onClick={() => { setShowManualLead(true); setManualResult(null); setManualForm({ fname: '', lname: '', email: '', phone: '', property: '', note: '', source: 'Referral' }); }}
+                  style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '8px', padding: '.4rem 1rem', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.4rem' }}
+                >
+                  + Add lead
+                </button>
+                <div className="filter-row">
+                  {[['all','All'],['HOT','🔥 Hot'],['WARM','🌤 Warm'],['COLD','❄️ Cold']].map(([f,l]) => (
+                    <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{l}</button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -1814,6 +1851,36 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
             </div>
           </div>
 
+
+                    {/* ── REFERRAL / PERSONAL TEXT FORWARD TIP ────────────────── */}
+                    <div style={{ background: '#fff8e6', border: '1.5px solid #f0d080', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>📨</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '700', fontSize: '14px', color: '#5a4400', marginBottom: '.35rem' }}>
+                            Got a referral via text or personal email?
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#5a4400', lineHeight: '1.7', marginBottom: '.75rem' }}>
+                            Forward it to your Say HelloLeads inbound address below and we'll automatically parse it, create the lead, score it with AI, and add it to your dashboard — no manual entry needed.
+                            <br />Works with: personal text forwards, referral emails, any message someone sends you directly.
+                          </div>
+                          {inboundAddr ? (
+                            <div style={{ background: 'rgba(255,255,255,.7)', border: '1px solid #f0d080', borderRadius: '8px', padding: '.75rem 1rem', display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
+                              <code style={{ fontSize: '13px', flex: 1, wordBreak: 'break-all', color: '#5a4400' }}>{inboundAddr}</code>
+                              <button onClick={() => navigator.clipboard.writeText(inboundAddr)}
+                                style={{ fontSize: '12px', background: '#8a6800', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                Copy address
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: '13px', color: '#8a6800' }}>Your inbound address will appear here once your account is set up.</div>
+                          )}
+                          <div style={{ fontSize: '12px', color: '#8a6800', marginTop: '.5rem' }}>
+                            💡 Tip: Save this address in your phone contacts as "Say HelloLeads" so you can forward texts in 2 taps.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* ── ZILLOW / HOMES.COM / REALTOR.COM ─────────────────────── */}
           {(() => {
@@ -2092,6 +2159,108 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
       {/* HOW IT WORKS MODAL */}
       {howItWorksOpen && <HowItWorksModal onClose={() => setHowItWorksOpen(false)} />}
 
+      {/* MANUAL LEAD ENTRY MODAL */}
+      {showManualLead && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={e => { if (e.target === e.currentTarget && !manualSubmitting) { setShowManualLead(false); setManualResult(null); } }}>
+          <div style={{ background: '#fff', borderRadius: '18px', padding: '1.75rem', maxWidth: '500px', width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,.18)', maxHeight: '90vh', overflowY: 'auto' }}>
+
+            {manualResult ? (
+              /* ── SUCCESS STATE — OPTION B: agent reviews + approves outreach ── */
+              <ManualLeadResult
+                result={manualResult}
+                onSendOutreach={async (leadId, message, channel) => {
+                  const res = await fetch('/api/leads/send-outreach', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ leadId, message, channel }),
+                  });
+                  return res.json();
+                }}
+                onAddAnother={() => {
+                  setManualResult(null);
+                  setManualForm({ fname: '', lname: '', email: '', phone: '', property: '', note: '', source: 'Referral' });
+                }}
+                onDone={() => { setShowManualLead(false); setManualResult(null); }}
+                onGoToIntegrations={() => { setShowManualLead(false); setView('integrations'); }}
+              />
+            ) : (
+              /* ── FORM STATE ── */
+              <div>
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '.25rem' }}>Add lead manually</div>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.5' }}>
+                    Referral, open house, sign call, or any lead that came in outside your automated channels.
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>First name *</label>
+                    <input value={manualForm.fname} onChange={e => setManualForm(f => ({...f, fname: e.target.value}))} placeholder="Maria" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>Last name</label>
+                    <input value={manualForm.lname} onChange={e => setManualForm(f => ({...f, lname: e.target.value}))} placeholder="Chen" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>Email</label>
+                    <input type="email" value={manualForm.email} onChange={e => setManualForm(f => ({...f, email: e.target.value}))} placeholder="maria@email.com" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>Phone</label>
+                    <input type="tel" value={manualForm.phone} onChange={e => setManualForm(f => ({...f, phone: e.target.value}))} placeholder="(513) 555-0192" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-.5rem', marginBottom: '.75rem' }}>* Email or phone required</p>
+
+                <div style={{ marginBottom: '.75rem' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>Property interested in</label>
+                  <input value={manualForm.property} onChange={e => setManualForm(f => ({...f, property: e.target.value}))} placeholder="412 Elm St, Hyde Park — or just an area" style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                </div>
+
+                <div style={{ marginBottom: '.75rem' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>Source</label>
+                  <select value={manualForm.source} onChange={e => setManualForm(f => ({...f, source: e.target.value}))} style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none', background: '#fff' }}>
+                    {['Referral', 'Open house', 'Sign call', 'Personal text', 'Personal email', 'Social media', 'Networking', 'Other'].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--muted)', marginBottom: '.3rem' }}>
+                    Notes <span style={{ fontWeight: 400 }}>(referred by, budget, what they said — AI uses this to score)</span>
+                  </label>
+                  <textarea
+                    value={manualForm.note}
+                    onChange={e => setManualForm(f => ({...f, note: e.target.value}))}
+                    placeholder="e.g. Referred by John Smith. Looking in Hyde Park, budget around $400k, wants to move in 60 days."
+                    rows={3}
+                    style={{ width: '100%', padding: '.6rem .9rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontFamily: 'inherit', fontSize: '14px', outline: 'none', resize: 'vertical' }}
+                  />
+                </div>
+
+                <button
+                  onClick={submitManualLead}
+                  disabled={manualSubmitting || !manualForm.fname || (!manualForm.email && !manualForm.phone)}
+                  style={{ width: '100%', background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.85rem', fontSize: '15px', fontWeight: '700', cursor: manualSubmitting || !manualForm.fname || (!manualForm.email && !manualForm.phone) ? 'default' : 'pointer', opacity: manualSubmitting || !manualForm.fname || (!manualForm.email && !manualForm.phone) ? .6 : 1, marginBottom: '.65rem' }}
+                >
+                  {manualSubmitting ? '🤖 Scoring with AI…' : 'Add & score lead →'}
+                </button>
+                <button
+                  onClick={() => setShowManualLead(false)}
+                  style={{ width: '100%', background: 'none', border: 'none', color: 'var(--muted)', fontSize: '13px', cursor: 'pointer', padding: '.25rem' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* WAITLIST MODAL */}
       {waitlistPlan && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
@@ -2155,6 +2324,169 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
       )}
 
    </>
+  );
+}
+
+// ─── HOW IT WORKS MODAL ───────────────────────────────────────────────────────
+
+// ─── MANUAL LEAD RESULT — Option B approval UI ───────────────────────────────
+
+function ManualLeadResult({ result, onSendOutreach, onAddAnother, onDone, onGoToIntegrations }) {
+  const { lead, suggestedOutreach, twilioReady, hasEmail } = result;
+  const [draft, setDraft]         = useState(suggestedOutreach || '');
+  const [sending, setSending]     = useState(false);
+  const [sentResult, setSentResult] = useState(null); // { emailSent, smsSent, errors }
+  const scoreColor = lead.score === 'HOT' ? '#c0392b' : lead.score === 'COLD' ? '#2980b9' : '#e67e22';
+  const scoreEmoji = lead.score === 'HOT' ? '🔥' : lead.score === 'COLD' ? '❄️' : '🌤️';
+
+  async function send(channel) {
+    if (!draft.trim()) return;
+    setSending(true);
+    try {
+      const data = await onSendOutreach(lead.id, draft.trim(), channel);
+      setSentResult(data);
+    } catch (e) { console.error('send-outreach error:', e); }
+    setSending(false);
+  }
+
+  if (sentResult) {
+    return (
+      <div>
+        <div style={{ textAlign: 'center', padding: '1rem 0 1.25rem' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '.5rem' }}>
+            {sentResult.emailSent || sentResult.smsSent ? '✅' : '⚠️'}
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: '700', marginBottom: '.35rem' }}>
+            {sentResult.emailSent && sentResult.smsSent ? 'Email & SMS sent!'
+              : sentResult.emailSent ? 'Email sent!'
+              : sentResult.smsSent  ? 'SMS sent!'
+              : 'Message saved — send manually'}
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+            {sentResult.emailSent || sentResult.smsSent
+              ? `${lead.fname} is now in your active leads. The AI will continue the conversation automatically.`
+              : `${lead.fname} has been added to your dashboard. Use the message below to reach out.`}
+          </div>
+        </div>
+
+        {sentResult.errors?.length > 0 && (
+          <div style={{ background: '#fff8e6', border: '1px solid #f0d080', borderRadius: '8px', padding: '.75rem 1rem', marginBottom: '1rem', fontSize: '13px', color: '#5a4400' }}>
+            {sentResult.errors.map((e, i) => <div key={i}>⚠️ {e}</div>)}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '.75rem' }}>
+          <button onClick={onAddAnother} style={{ flex: 1, background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.75rem', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+            Add another
+          </button>
+          <button onClick={onDone} style={{ flex: 1, background: 'none', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '.75rem', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Score header */}
+      <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.5rem' }}>Step 1: AI scored your lead</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1rem' }}>
+        <div style={{ fontSize: '1.75rem' }}>{scoreEmoji}</div>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: '700' }}>{lead.fname} {lead.lname} — scored</div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+            <strong style={{ color: scoreColor }}>{lead.score}</strong> · {lead.source}
+          </div>
+        </div>
+      </div>
+
+      {/* AI brief */}
+      {lead.summary && (
+        <div style={{ background: 'var(--sage-light)', border: '1px solid var(--sage-mid)', borderRadius: '10px', padding: '.85rem 1rem', fontSize: '13px', lineHeight: '1.6', marginBottom: '1rem' }}>
+          <div style={{ fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--sage)', marginBottom: '.3rem' }}>AI brief</div>
+          {lead.summary}
+        </div>
+      )}
+
+      {/* Next action */}
+      {lead.nextAction && (
+        <div style={{ background: lead.score === 'HOT' ? '#fff0ee' : '#f7f7f4', border: `1px solid ${lead.score === 'HOT' ? '#f5c6c2' : 'var(--border)'}`, borderRadius: '10px', padding: '.85rem 1rem', fontSize: '13px', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+          <div style={{ fontWeight: '600', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '.05em', color: lead.score === 'HOT' ? '#c0392b' : 'var(--muted)', marginBottom: '.3rem' }}>→ Recommended next step</div>
+          {lead.nextAction}
+        </div>
+      )}
+
+      {/* Draft message editor */}
+      {suggestedOutreach && (
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '.5rem' }}>
+            Step 2: Edit if needed, then choose how to send
+          </div>
+          <textarea
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            rows={4}
+            style={{ width: '100%', padding: '.75rem 1rem', border: '1.5px solid var(--border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.6', outline: 'none', resize: 'vertical' }}
+          />
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '.3rem' }}>
+            This goes out in your name — edit freely to match your voice.
+          </div>
+        </div>
+      )}
+
+      {/* Send buttons */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', marginBottom: '1rem' }}>
+        {hasEmail && (
+          <button
+            onClick={() => send('email')}
+            disabled={sending || !draft.trim()}
+            style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '10px', padding: '.8rem', fontSize: '14px', fontWeight: '600', cursor: sending || !draft.trim() ? 'default' : 'pointer', opacity: sending || !draft.trim() ? .6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}
+          >
+            {sending ? 'Sending…' : '📧 Send via email — AI continues conversation'}
+          </button>
+        )}
+        <button
+          onClick={() => send('sms')}
+          disabled={sending || !draft.trim() || !twilioReady}
+          style={{ background: twilioReady ? 'var(--sage)' : '#e5e5e5', color: twilioReady ? '#fff' : '#888', border: 'none', borderRadius: '10px', padding: '.8rem', fontSize: '14px', fontWeight: '600', cursor: !twilioReady || sending || !draft.trim() ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.5rem' }}
+          title={!twilioReady ? 'Twilio not configured — set up SMS in Integrations' : ''}
+        >
+          📱 Send via SMS — AI continues conversation
+          {!twilioReady && <span style={{ fontSize: '11px', fontWeight: '400' }}> (Twilio required)</span>}
+        </button>
+        {hasEmail && lead.phone && twilioReady && (
+          <button
+            onClick={() => send('both')}
+            disabled={sending || !draft.trim()}
+            style={{ background: '#fff', color: 'var(--sage)', border: '1.5px solid var(--sage)', borderRadius: '10px', padding: '.8rem', fontSize: '14px', fontWeight: '600', cursor: sending || !draft.trim() ? 'default' : 'pointer', opacity: sending || !draft.trim() ? .6 : 1 }}
+          >
+            Send both email &amp; SMS
+          </button>
+        )}
+        <button
+          onClick={() => { navigator.clipboard.writeText(draft); }}
+          style={{ background: '#f7f7f4', color: 'var(--black)', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '.8rem', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+        >
+          📋 Copy message — I'll send it myself
+        </button>
+      </div>
+
+      {!twilioReady && lead.phone && (
+        <div style={{ background: '#fff8e6', border: '1px solid #f0d080', borderRadius: '8px', padding: '.65rem .9rem', fontSize: '12px', color: '#5a4400', marginBottom: '.75rem' }}>
+          💡 <strong>Want to send SMS?</strong> <a onClick={onGoToIntegrations} style={{ color: '#8a6800', cursor: 'pointer', textDecoration: 'underline' }}>Set up Twilio in Integrations →</a>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '.75rem' }}>
+        <button onClick={onAddAnother} style={{ flex: 1, background: 'none', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '.65rem', fontSize: '13px', cursor: 'pointer' }}>
+          Add another
+        </button>
+        <button onClick={onDone} style={{ flex: 1, background: 'none', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '.65rem', fontSize: '13px', cursor: 'pointer' }}>
+          Done
+        </button>
+      </div>
+    </div>
   );
 }
 
