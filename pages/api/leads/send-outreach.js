@@ -57,11 +57,12 @@ export default async function handler(req, res) {
       if (cfg.postmarkToken) {
         const { ServerClient } = await import('postmark');
         const client = new ServerClient(cfg.postmarkToken);
-        // Extract display name — handles both "Jane Smith" and legacy "Jane Smith <abc@sayhelloleads.com>"
+        // From: verified sending domain with agent display name
+        // Reply-To: inbound address so buyer replies route back via Postmark webhook
         const displayName = cfg.displayName || agentName;
-        const inboundFrom = `${displayName} <${lead.agentId}@inbound.sayhelloleads.com>`;
+        const fromEmail   = process.env.POSTMARK_FROM_EMAIL || 'leads@sayhelloleads.com';
         await client.sendEmail({
-          From:     inboundFrom,
+          From:     `${displayName} <${fromEmail}>`,
           ReplyTo:  `${lead.agentId}@inbound.sayhelloleads.com`,
           To:       lead.email,
           Subject:  lead.property ? `Re: ${lead.property}` : `Hi ${lead.fname} — following up`,
@@ -103,8 +104,8 @@ export default async function handler(req, res) {
   // ── Notify the agent (same as any other new lead) ─────────────────────────
   // This replaces the triggerAIResponse call — we notify the agent without
   // sending a second AI message to the buyer.
-  if (agentEmail && process.env.RESEND_API_KEY) {
-    notifyAgentNewLead(lead, agentEmail, agentName, process.env.RESEND_API_KEY)
+  if (agentEmail) {
+    notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
       .catch(e => console.error('[send-outreach] agent notify error:', e.message));
   }
 
