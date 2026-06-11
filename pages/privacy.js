@@ -116,7 +116,7 @@ export default function PrivacyPage() {
           To exercise any of these rights, email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We will respond within 30 days.
         </Section>
 
-        <Section title="7. SMS Communications and Consent" last>
+        <Section title="7. SMS Communications and Consent">
           <ul>
             <li>If a buyer or seller submits their contact information through a lead form (such as a property inquiry or website form), they consent to be contacted via SMS regarding their request. Say HelloLeads facilitates these communications on behalf of real estate agents.</li>
             <li>SMS messages are used strictly for transactional and customer service purposes, such as responding to inquiries, answering questions, and coordinating showings or consultations. Message and data rates may apply.</li>
