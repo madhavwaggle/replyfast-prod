@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         const client = new ServerClient(cfg.postmarkToken);
         await client.sendEmail({
           From:     cfg.emailFrom || `${agentName} <noreply@sayhelloleads.com>`,
-          ReplyTo:  agentEmail || undefined, // replies come back to the agent
+          ReplyTo:  `${lead.agentId}@inbound.sayhelloleads.com`,
           To:       lead.email,
           Subject:  lead.property ? `Re: ${lead.property}` : `Hi ${lead.fname} — following up`,
           TextBody: message,
