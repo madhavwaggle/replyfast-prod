@@ -17,7 +17,7 @@ import { authOptions }       from '../../../lib/auth';
 import { saveLead }          from '../../../lib/db';
 import { getUserById }       from '../../../lib/users';
 import { getAgentConfig }    from '../../../lib/agentConfig';
-import { buildScoringPrompt, parseScoreResponse } from '../../lib/aiPrompts';
+import { buildScoringPrompt, parseScoreResponse } from '../../../lib/aiPrompts';
 import { validateScore }     from '../../../lib/guardrails';
 import { v4 as uuidv4 }      from 'uuid';
 import Anthropic             from '@anthropic-ai/sdk';
