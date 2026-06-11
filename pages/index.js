@@ -642,6 +642,10 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
     );
   }
 
+  // Declared at component scope so all JSX sections can reference them
+  const agentId = session?.user?.id || '';
+  const inboundAddr = agentId ? `${agentId}@inbound.sayhelloleads.com` : '';
+
   return (
     <>
       <Head>
@@ -1884,8 +1888,6 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
 
                     {/* ── ZILLOW / HOMES.COM / REALTOR.COM ─────────────────────── */}
           {(() => {
-            const agentId = session?.user?.id || '';
-            const inboundAddr = agentId ? `${agentId}@inbound.sayhelloleads.com` : '';
             const ForwardingAddress = ({ addr }) => addr ? (
               <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '.85rem 1rem', marginTop: '.75rem' }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: '.4rem' }}>Your unique forwarding address</div>
