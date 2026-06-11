@@ -12,7 +12,7 @@
  *   e.g. c49cbb55-b2c7-4ab0-9e60-39cd0306b3c3@inbound.sayhelloleads.com
  */
 
-import { saveLead } from '../../lib/db';
+import { saveLead, findLeadByContact } from '../../lib/db';
 import { getUserById } from '../../lib/users';
 import { getAgentConfig } from '../../lib/agentConfig';
 import { triggerAIResponse } from './new-lead';
@@ -63,16 +63,31 @@ export default async function handler(req, res) {
   }
 
   const cfg  = await getAgentConfig(agentId);
-  const lead = parseLeadEmail(fromEmail, subject, textBody, agentId);
+  const parsed = parseLeadEmail(fromEmail, subject, textBody, agentId);
 
-  if (!lead.email && !lead.phone) {
+  if (!parsed.email && !parsed.phone) {
     console.log('[inbound-email] no contact info parsed from:', subject);
     return res.status(200).json({ message: 'ignored — not a lead email' });
   }
 
-  lead.id        = uuidv4();
-  lead.createdAt = new Date().toISOString();
-  lead.updatedAt = new Date().toISOString();
+  // ── Dedup: if buyer is replying to an existing conversation, append ───────
+  const existing = await findLeadByContact(agentId, { email: parsed.email, phone: parsed.phone });
+
+  let lead;
+  if (existing) {
+    const replyText = parsed.messages?.[0]?.text || textBody?.trim()?.slice(0, 500) || '';
+    if (replyText) {
+      existing.messages = [...(existing.messages || []), { role: 'lead', text: replyText }];
+      existing.updatedAt = new Date().toISOString();
+    }
+    lead = existing;
+    console.log('[inbound-email] reply appended to existing lead:', existing.id);
+  } else {
+    lead = parsed;
+    lead.id        = uuidv4();
+    lead.createdAt = new Date().toISOString();
+    lead.updatedAt = new Date().toISOString();
+  }
 
   await saveLead(lead);
 
