@@ -116,19 +116,27 @@ export default function PrivacyPage() {
           To exercise any of these rights, email us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. We will respond within 30 days.
         </Section>
 
-        <Section title="7. Cookies">
+        <Section title="7. SMS Communications and Consent" last>
+          <ul>
+            <li>If a buyer or seller submits their contact information through a lead form (such as a property inquiry or website form), they consent to be contacted via SMS regarding their request. Say HelloLeads facilitates these communications on behalf of real estate agents.</li>
+            <li>SMS messages are used strictly for transactional and customer service purposes, such as responding to inquiries, answering questions, and coordinating showings or consultations. Message and data rates may apply.</li>
+            <li>Recipients may opt out of SMS communications at any time by replying STOP. We do not send unsolicited messages or marketing campaigns.</li>
+          </ul>
+        </Section>
+
+        <Section title="8. Cookies">
           We use a session cookie to keep you signed in. We do not use advertising or tracking cookies. We do not use third-party analytics services that track you across sites.
         </Section>
 
-        <Section title="8. Children's privacy">
+        <Section title="9. Children's privacy">
           Say HelloLeads is not directed at children under 13. We do not knowingly collect personal information from anyone under 13. If you believe we have inadvertently collected such information, please contact us and we will delete it promptly.
         </Section>
 
-        <Section title="9. Changes to this policy">
+        <Section title="10. Changes to this policy">
           We may update this policy from time to time. When we do, we will update the effective date at the top of this page and, for material changes, notify registered users by email. Continued use of the platform after changes constitutes acceptance.
         </Section>
 
-        <Section title="10. Contact us" last>
+        <Section title="11. Contact us" last>
           Questions about this policy or your data? We're happy to help.
           <div style={{ marginTop: '1rem', padding: '1rem 1.25rem', background: '#f0f0ec', borderRadius: '10px', fontSize: '14px' }}>
             📧 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
