@@ -15,6 +15,14 @@ export default function Footer({ onHowItWorks }) {
       marginTop: 'auto',
       fontFamily: "'DM Sans', sans-serif",
     }}>
+      <style>{`
+        .footer-col {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+      `}</style>
       <div style={{
         maxWidth: '1000px',
         margin: '0 auto',
@@ -26,7 +34,7 @@ export default function Footer({ onHowItWorks }) {
       }}>
 
         {/* ── Column 1: Brand ── */}
-        <div>
+        <div className="footer-col">
           <div style={{ fontSize: '18px', fontWeight: '700', color: '#0a0a0a', marginBottom: '.4rem', letterSpacing: '-.3px' }}>
             Say <span style={{ color: '#4a6741' }}>HelloLeads</span>
           </div>
@@ -36,7 +44,7 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 2: Product ── */}
-        <div>
+        <div className="footer-col">
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Product
           </div>
@@ -52,7 +60,7 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 3: Legal ── */}
-        <div>
+        <div className="footer-col">
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Legal & Support
           </div>
