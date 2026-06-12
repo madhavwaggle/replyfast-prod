@@ -42,11 +42,11 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 2: Product ── */}
-        <div className="footer-col">
+        <div className="footer-col" style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Product
           </div>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', alignItems: 'center' }}>
             <FooterLink href="/">Home</FooterLink>
             {onHowItWorks
               ? <button onClick={onHowItWorks} style={linkBtnStyle}>How it works</button>
@@ -58,11 +58,11 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 3: Legal ── */}
-        <div className="footer-col">
+        <div className="footer-col" style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Legal & Support
           </div>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '.6rem', alignItems: 'center' }}>
             <FooterLink href="/privacy">Privacy policy</FooterLink>
             <FooterLink href="/terms">Terms of service</FooterLink>
             <FooterLink href="mailto:hello@sayhelloleads.com">Contact us</FooterLink>
