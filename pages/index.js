@@ -1507,12 +1507,12 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
             {/* ONBOARDING CHECKLIST — show until all core steps done */}
             {(() => {
               const steps = [
-                { done: checklist.profile,  label: 'Complete your profile',                          dest: 'profile',       hint: 'Name + notification email',          required: true  },
-                { done: checklist.display,  label: 'Set your display name',                          dest: 'profile',       hint: 'What leads see as the email sender',  required: true  },
-                { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com or Redfin', dest: 'integrations',  hint: 'Recommended · 2-minute email setting',             required: true  },
-                { done: checklist.calendly, label: 'Add your Calendly booking link',                 dest: 'integrations',  hint: 'Recommended · takes 2 minutes',      required: false },
-                { done: checklist.sms,      label: 'Connect Twilio for SMS replies',                 dest: 'integrations',  hint: 'Optional · requires 10DLC registration', required: false },
-                { done: checklist.website,  label: 'Connect your website or Zapier',                 dest: 'integrations',  hint: 'Optional — any lead source',         required: false },
+                { done: checklist.profile,  label: 'Complete your profile',                          dest: 'profile',       hint: 'Name + notification email',          required: true,  recommended: false },
+                { done: checklist.display,  label: 'Set your display name',                          dest: 'profile',       hint: 'What leads see as the email sender',  required: true,  recommended: false },
+                { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com or Redfin', dest: 'integrations',  hint: '2-minute email setting',             required: true,  recommended: true  },
+                { done: checklist.calendly, label: 'Add your Calendly booking link',                 dest: 'integrations',  hint: 'Takes 2 minutes',                    required: false, recommended: true  },
+                { done: checklist.sms,      label: 'Connect Twilio for SMS replies',                 dest: 'integrations',  hint: 'Requires 10DLC registration',        required: false, recommended: false },
+                { done: checklist.website,  label: 'Connect your website or Zapier',                 dest: 'integrations',  hint: 'Any lead source',                    required: false, recommended: false },
               ];
               const requiredSteps  = steps.filter(s => s.required);
               const requiredDone   = requiredSteps.filter(s => s.done).length;
@@ -1546,8 +1546,11 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
                             <span style={{ fontSize: '13px', fontWeight: '500', textDecoration: item.done ? 'line-through' : 'none', color: item.done ? 'var(--muted)' : 'var(--black)' }}>
                               {item.label}
                             </span>
-                            {!item.required && !item.done && (
+                            {item.recommended && !item.done && (
                               <span style={{ fontSize: '10px', background: 'var(--amber-light)', color: 'var(--amber)', borderRadius: '20px', padding: '1px 7px', marginLeft: '.5rem', fontWeight: '600' }}>Recommended</span>
+                            )}
+                            {!item.required && !item.recommended && !item.done && (
+                              <span style={{ fontSize: '10px', background: '#f0f0f0', color: 'var(--muted)', borderRadius: '20px', padding: '1px 7px', marginLeft: '.5rem', fontWeight: '500' }}>Optional</span>
                             )}
                             {!item.done && <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '.5rem' }}>{item.hint}</span>}
                           </div>
@@ -1828,6 +1831,29 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
             <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Your name, agency, and notification preferences.</p>
           </div>
 
+          {/* AGENT PUBLIC PAGE URL — top of profile so agents find it immediately */}
+          {(() => {
+            const slug = session?.user?.name
+              ? session.user.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-')
+              : null;
+            const shareUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : 'https://sayhelloleads.com'}/agent/${slug}` : null;
+            return shareUrl ? (
+              <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '2rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.35rem' }}>Your public inquiry page</div>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '.75rem', lineHeight: '1.5' }}>
+                  Share this link with buyers — they fill out the form and leads come straight to your dashboard.
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap', background: '#fff', border: '1px solid var(--sage-mid)', borderRadius: '8px', padding: '.65rem 1rem' }}>
+                  <span style={{ fontSize: '13px', fontFamily: 'monospace', flex: 1, wordBreak: 'break-all', color: 'var(--black)' }}>{shareUrl}</span>
+                  <button onClick={() => navigator.clipboard.writeText(shareUrl)}
+                    style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Copy link
+                  </button>
+                </div>
+              </div>
+            ) : null;
+          })()}
+
           {/* PROFILE CARD */}
           <div style={{ marginBottom: '2.5rem' }}>
             <div className="section-label">Your profile</div>
@@ -1920,29 +1946,6 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
               </div>
             </div>
           </div>
-
-          {/* AGENT PUBLIC PAGE URL */}
-          {(() => {
-            const slug = session?.user?.name
-              ? session.user.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-')
-              : null;
-            const shareUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : 'https://sayhelloleads.com'}/agent/${slug}` : null;
-            return shareUrl ? (
-              <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1rem' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.35rem' }}>Your public inquiry page</div>
-                <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '.75rem', lineHeight: '1.5' }}>
-                  Share this link with buyers — they fill out the form and leads come straight to your dashboard.
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap', background: '#fff', border: '1px solid var(--sage-mid)', borderRadius: '8px', padding: '.65rem 1rem' }}>
-                  <span style={{ fontSize: '13px', fontFamily: 'monospace', flex: 1, wordBreak: 'break-all', color: 'var(--black)' }}>{shareUrl}</span>
-                  <button onClick={() => navigator.clipboard.writeText(shareUrl)}
-                    style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                    Copy link
-                  </button>
-                </div>
-              </div>
-            ) : null;
-          })()}
 
           {/* CALENDLY TIP */}
           {!creds.calendlyUrl?.isSet && (
