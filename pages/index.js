@@ -1509,9 +1509,9 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
               const steps = [
                 { done: checklist.profile,  label: 'Complete your profile',                          dest: 'profile',       hint: 'Name + notification email',          required: true  },
                 { done: checklist.display,  label: 'Set your display name',                          dest: 'profile',       hint: 'What leads see as the email sender',  required: true  },
-                { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com or Redfin', dest: 'integrations',  hint: '2-minute email setting',             required: true  },
-                { done: checklist.sms,      label: 'Connect Twilio for SMS replies',                 dest: 'integrations',  hint: 'Recommended · requires 10DLC registration', required: false },
+                { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com or Redfin', dest: 'integrations',  hint: 'Recommended · 2-minute email setting',             required: true  },
                 { done: checklist.calendly, label: 'Add your Calendly booking link',                 dest: 'integrations',  hint: 'Recommended · takes 2 minutes',      required: false },
+                { done: checklist.sms,      label: 'Connect Twilio for SMS replies',                 dest: 'integrations',  hint: 'Optional · requires 10DLC registration', required: false },
                 { done: checklist.website,  label: 'Connect your website or Zapier',                 dest: 'integrations',  hint: 'Optional — any lead source',         required: false },
               ];
               const requiredSteps  = steps.filter(s => s.required);
