@@ -58,11 +58,13 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const creds = await getAgentCredentials(agentId);
     // Return masked values + a boolean "isSet" for each field
+    // Non-sensitive fields (URLs) are returned in full
+    const NON_SENSITIVE = ['calendlyUrl'];
     const masked = {};
     for (const f of FIELDS) {
       masked[f] = {
-        isSet: !!(creds[f] && creds[f].length > 0),
-        masked: maskValue(creds[f]),
+        isSet:  !!(creds[f] && creds[f].length > 0),
+        masked: NON_SENSITIVE.includes(f) ? (creds[f] || '') : maskValue(creds[f]),
       };
     }
     return res.status(200).json({ credentials: masked });
