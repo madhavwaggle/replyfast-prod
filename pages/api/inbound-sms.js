@@ -93,12 +93,15 @@ export default async function handler(req, res) {
     lead.messages.push({ role: 'ai', text: aiReply });
     lead.updatedAt = new Date().toISOString();
 
-    // ── 2. Score on first message ────────────────────────────────────────────
-    if (isNew) {
+    const previousScore = lead.score;
+
+    // ── 2. Score — first message AND every 2nd reply after ───────────────────
+    const buyerMsgCount = lead.messages.filter(m => m.role === 'lead').length;
+    if (isNew || (buyerMsgCount >= 2 && buyerMsgCount % 2 === 0)) {
       try {
         const scorePrompt = buildScoringPrompt({ lead });
         const scoreResp = await anthropic.messages.create({
-          model:      'claude-haiku-4-5-20251001', // Haiku is sufficient for structured JSON scoring
+          model:      'claude-haiku-4-5-20251001',
           max_tokens: 500,
           system:     scorePrompt.system,
           messages:   scorePrompt.messages,
@@ -111,23 +114,48 @@ export default async function handler(req, res) {
           lead.summary    = scored.summary || `SMS lead texted about ${lead.property}.`;
           lead.nextAction = scored.nextAction || 'Follow up to qualify.';
         } else {
-          lead.score   = 'WARM';
-          lead.summary = `SMS lead texted about ${lead.property}. Follow up needed.`;
+          if (isNew) lead.score = 'WARM';
         }
       } catch {
-        lead.score   = 'WARM';
-        lead.summary = `SMS lead texted about ${lead.property}. Follow up needed.`;
+        if (isNew) lead.score = 'WARM';
       }
     }
 
     await saveLead(lead);
 
-    // ── 3. Notify agent on first message ─────────────────────────────────────
+    // ── 3. Three-tier notifications ───────────────────────────────────────────
+    const agentEmail = agent?.notifyEmail || agent?.email;
+    if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
+
     if (isNew) {
-      const agentEmail = agent?.notifyEmail || agent?.email;
+      // First message — always notify
       if (agentEmail) {
         await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
           .catch(e => console.error('SMS notify error:', e.message));
+      }
+    } else {
+      const { detectCallIntent, notifyAgentCallRequest, notifyAgentLeadReply } = await import('../../lib/notify');
+      const lastLeadMsg = Body || '';
+      const callIntent  = detectCallIntent(lastLeadMsg);
+
+      if (callIntent) {
+        // Tier 1 — Call intent: urgent email + SMS to agent
+        if (agentEmail) {
+          await notifyAgentCallRequest(lead, agentEmail, agentName, cfg.resendKey)
+            .catch(e => console.error('SMS call alert error:', e.message));
+        }
+      } else if (lead.score === 'HOT' && previousScore !== 'HOT') {
+        // Tier 2 — Score just upgraded to HOT
+        if (agentEmail) {
+          await notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
+            .catch(e => console.error('SMS HOT notify error:', e.message));
+        }
+      } else {
+        // Tier 3 — WARM/COLD reply or score unchanged: lightweight email only
+        if (agentEmail) {
+          notifyAgentLeadReply(lead, agentEmail, agentName, cfg.resendKey)
+            .catch(e => console.error('SMS reply notify error:', e.message));
+        }
       }
     }
 
