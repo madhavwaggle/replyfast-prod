@@ -68,7 +68,7 @@ export default function App() {
   const [credsSaving, setCredsSaving] = useState({});
   const [credsMsg, setCredsMsg]     = useState({});
   // Onboarding checklist
-  const [checklist, setChecklist]   = useState({ profile: false, zillow: false, sms: false, website: false });
+  const [checklist, setChecklist]   = useState({ profile: false, zillow: false, sms: false, website: false, calendly: false, display: false });
   // AI usage meter
   const [aiUsage, setAiUsage]       = useState({ used: 0, cap: 100, month: '' });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -367,10 +367,12 @@ export default function App() {
       const p   = profData.profile || {};
       const c   = credsData.credentials || {};
       setChecklist({
-        profile: !!(p.name && p.notifyEmail),
-        zillow:  !!(p.zillowDone || p.homesDone || p.realtorDone || p.redfinDone),
-        sms:     !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
-        website: !!(c.webhookSecret?.isSet),
+        profile:  !!(p.name && p.notifyEmail),
+        zillow:   !!(p.zillowDone || p.homesDone || p.realtorDone || p.redfinDone),
+        sms:      !!(c.twilioSid?.isSet && c.twilioPhone?.isSet),
+        website:  !!(c.webhookSecret?.isSet),
+        calendly: !!(c.calendlyUrl?.isSet),
+        display:  !!(p.displayName),
       });
     } catch (e) { console.error('loadChecklist:', e); }
   }
@@ -1502,34 +1504,61 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
                 </div>
               </div>
             )}
-            {(!checklist.profile || !checklist.zillow) && (
-              <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '1rem', color: 'var(--black)' }}>
-                  🚀 Get set up — {[checklist.profile, checklist.zillow].filter(Boolean).length} of 2 steps done — <span style={{fontWeight:'400',color:'var(--muted)'}}>SMS + website optional</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
-                  {[
-                    { done: checklist.profile, label: 'Complete your profile',               dest: 'profile',       hint: 'Name + notification email' },
-                    { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com, Realtor.com, or Redfin', dest: 'integrations',  hint: '2-minute email setting' },
-                    { done: checklist.sms,      label: 'Connect Twilio for SMS replies',        dest: 'integrations',  hint: 'AI responds via text' },
-                    { done: checklist.website,  label: 'Connect your website or Zapier',        dest: 'integrations',  hint: 'Optional — any lead source' },
-                  ].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', cursor: item.done ? 'default' : 'pointer' }}
-                      onClick={() => !item.done && setView(item.dest)}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: item.done ? 'var(--sage)' : 'var(--border)', color: '#fff', fontSize: '11px', fontWeight: '700' }}>
-                        {item.done ? '✓' : i + 1}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: '13px', fontWeight: '500', textDecoration: item.done ? 'line-through' : 'none', color: item.done ? 'var(--muted)' : 'var(--black)' }}>{item.label}</span>
-                        {!item.done && <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '.5rem' }}>{item.hint}</span>}
-                      </div>
-                      {!item.done && <span style={{ fontSize: '12px', color: 'var(--sage)', fontWeight: '500' }}>Set up →</span>}
+            {/* ONBOARDING CHECKLIST — show until all core steps done */}
+            {(() => {
+              const steps = [
+                { done: checklist.profile,  label: 'Complete your profile',                          dest: 'profile',       hint: 'Name + notification email',          required: true  },
+                { done: checklist.display,  label: 'Set your display name',                          dest: 'profile',       hint: 'What leads see as the email sender',  required: true  },
+                { done: checklist.zillow,   label: 'Forward leads from Zillow, Homes.com or Redfin', dest: 'integrations',  hint: '2-minute email setting',             required: true  },
+                { done: checklist.sms,      label: 'Connect Twilio for SMS replies',                 dest: 'integrations',  hint: 'Recommended · requires 10DLC registration', required: false },
+                { done: checklist.calendly, label: 'Add your Calendly booking link',                 dest: 'integrations',  hint: 'Recommended · takes 2 minutes',      required: false },
+                { done: checklist.website,  label: 'Connect your website or Zapier',                 dest: 'integrations',  hint: 'Optional — any lead source',         required: false },
+              ];
+              const requiredSteps  = steps.filter(s => s.required);
+              const requiredDone   = requiredSteps.filter(s => s.done).length;
+              const allRequiredDone = requiredDone === requiredSteps.length;
+              const totalDone      = steps.filter(s => s.done).length;
+              // Hide once all required steps complete AND at least one optional done
+              if (allRequiredDone && totalDone >= requiredSteps.length + 1) return null;
+              let stepNum = 0;
+              return (
+                <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--black)' }}>
+                      🚀 Get set up — {totalDone} of {steps.length} done
                     </div>
-                  ))}
+                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                      {requiredDone} of {requiredSteps.length} required complete
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+                    {steps.map((item, i) => {
+                      if (!item.done) stepNum++;
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.75rem', cursor: item.done ? 'default' : 'pointer', opacity: item.done ? .7 : 1 }}
+                          onClick={() => !item.done && setView(item.dest)}>
+                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: item.done ? 'var(--sage)' : item.required ? 'var(--border)' : '#e8e8e8',
+                            color: '#fff', fontSize: '11px', fontWeight: '700' }}>
+                            {item.done ? '✓' : stepNum}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: '13px', fontWeight: '500', textDecoration: item.done ? 'line-through' : 'none', color: item.done ? 'var(--muted)' : 'var(--black)' }}>
+                              {item.label}
+                            </span>
+                            {!item.required && !item.done && (
+                              <span style={{ fontSize: '10px', background: 'var(--amber-light)', color: 'var(--amber)', borderRadius: '20px', padding: '1px 7px', marginLeft: '.5rem', fontWeight: '600' }}>Recommended</span>
+                            )}
+                            {!item.done && <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '.5rem' }}>{item.hint}</span>}
+                          </div>
+                          {!item.done && <span style={{ fontSize: '12px', color: 'var(--sage)', fontWeight: '500', whiteSpace: 'nowrap' }}>Set up →</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* SHAREABLE LINK BANNER */}
             {session && (() => {
@@ -1694,6 +1723,31 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
                         <span className="lead-time">{formatTime(lead.createdAt)}</span>
                       </div>
                     </div>
+                    {/* SMS quick-action icon — always visible on lead card */}
+                    {lead.phone && (
+                      <div
+                        title={twilioConfigured ? `Text ${lead.fname}` : 'Set up Twilio in Integrations to send SMS'}
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (!twilioConfigured) { setView('integrations'); return; }
+                          const msg = `Hi ${lead.fname}, just following up on ${lead.property || 'your inquiry'}. Are you still interested?`;
+                          const confirmed = window.confirm(`Send this SMS to ${lead.fname} at ${lead.phone}?\n\n"${msg}"\n\nYou can edit this message after clicking OK — this is just a confirmation.`);
+                          if (!confirmed) return;
+                          fetch('/api/send-sms', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ to: lead.phone, message: msg }),
+                          }).then(r => r.ok ? alert(`✅ SMS sent to ${lead.fname}!`) : alert('SMS failed — check Twilio setup.'));
+                        }}
+                        style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: twilioConfigured ? 'var(--sage-light)' : '#f0f0f0', cursor: twilioConfigured ? 'pointer' : 'default', transition: 'background .15s', border: `1px solid ${twilioConfigured ? 'var(--sage-mid)' : '#ddd'}` }}
+                        onMouseEnter={e => { if (twilioConfigured) e.currentTarget.style.background = '#d4e4d2'; }}
+                        onMouseLeave={e => e.currentTarget.style.background = twilioConfigured ? 'var(--sage-light)' : '#f0f0f0'}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={twilioConfigured ? '#4a6741' : '#bbb'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
 
                   {openDetailId === lead.id && (
@@ -1866,6 +1920,53 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
               </div>
             </div>
           </div>
+
+          {/* AGENT PUBLIC PAGE URL */}
+          {(() => {
+            const slug = session?.user?.name
+              ? session.user.name.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-')
+              : null;
+            const shareUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : 'https://sayhelloleads.com'}/agent/${slug}` : null;
+            return shareUrl ? (
+              <div style={{ background: 'var(--sage-light)', border: '1.5px solid var(--sage-mid)', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--sage)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: '.35rem' }}>Your public inquiry page</div>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '.75rem', lineHeight: '1.5' }}>
+                  Share this link with buyers — they fill out the form and leads come straight to your dashboard.
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap', background: '#fff', border: '1px solid var(--sage-mid)', borderRadius: '8px', padding: '.65rem 1rem' }}>
+                  <span style={{ fontSize: '13px', fontFamily: 'monospace', flex: 1, wordBreak: 'break-all', color: 'var(--black)' }}>{shareUrl}</span>
+                  <button onClick={() => navigator.clipboard.writeText(shareUrl)}
+                    style={{ background: 'var(--sage)', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    Copy link
+                  </button>
+                </div>
+              </div>
+            ) : null;
+          })()}
+
+          {/* CALENDLY TIP */}
+          {!creds.calendlyUrl?.isSet && (
+            <div style={{ background: '#fff8e6', border: '1.5px solid #f0d080', borderRadius: '14px', padding: '1.25rem 1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+              <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>📅</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#5a4400', marginBottom: '.25rem' }}>
+                  Recommended — add your Calendly link
+                </div>
+                <div style={{ fontSize: '13px', color: '#5a4400', lineHeight: '1.6', marginBottom: '.5rem' }}>
+                  Once a lead's timeline and budget are confirmed, the AI offers your booking link so they can schedule a showing directly — no back-and-forth on times.
+                </div>
+                <button onClick={() => setView('integrations')} style={{ fontSize: '12px', background: '#8a6800', color: '#fff', border: 'none', borderRadius: '7px', padding: '.4rem .85rem', cursor: 'pointer', fontWeight: '600' }}>
+                  Add Calendly in Integrations →
+                </button>
+              </div>
+            </div>
+          )}
+          {creds.calendlyUrl?.isSet && (
+            <div style={{ background: 'var(--sage-light)', border: '1px solid var(--sage-mid)', borderRadius: '14px', padding: '1rem 1.5rem', marginBottom: '1rem', fontSize: '13px', color: 'var(--sage)', display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+              <span>📅</span>
+              <span>Calendly connected — the AI will offer your booking link to qualified leads automatically.</span>
+            </div>
+          )}
 
           {/* LINK TO INTEGRATIONS */}
           <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '14px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
@@ -2130,6 +2231,25 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
             </>);
           })()}
 
+          {/* ── CALENDLY — now in Recommended ────────────────────────── */}
+          <IntegCard
+            icon="📅" title="Calendly — automatic booking link" badge="Recommended"
+            status={creds.calendlyUrl?.isSet}
+            desc={<>Once a lead's timeline and budget are confirmed, the AI naturally offers your Calendly link so they can book a showing directly — no back-and-forth on times needed.<br /><br /><strong>Without Calendly:</strong> the AI proposes 2–3 time slots in the conversation and notes the agreed time in the lead summary. Nothing breaks — this is purely additive.<br /><br /><strong>Steps:</strong><br />1. Sign up at <a href="https://calendly.com" target="_blank" style={{color:'var(--sage)'}}>calendly.com</a> — free plan is fine<br />2. Create an event type (e.g. "Property Showing — 30 min")<br />3. Copy your scheduling link and paste it below</>}
+            link="https://calendly.com" linkLabel="Open Calendly →"
+          >
+            <CredField
+              label="Your Calendly URL" field="calendlyUrl" placeholder="https://calendly.com/yourname/showing"
+              current={creds.calendlyUrl} saving={credsSaving.calendlyUrl} msg={credsMsg.calendlyUrl}
+              onSave={saveCred}
+            />
+            {creds.calendlyUrl?.isSet && (
+              <div style={{ marginTop: '.75rem', background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px', color: 'var(--sage)' }}>
+                ✓ Once leads qualify, the AI will offer your booking link automatically. It also renders as a <strong>📅 Book a showing →</strong> button in the chat UI.
+              </div>
+            )}
+          </IntegCard>
+
           {/* ── OPTIONAL SECTION ─────────────────────────────── */}
           <div style={{ margin: '2rem 0 1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '.6rem' }}>
@@ -2163,30 +2283,11 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
             />
           </IntegCard>
 
-          {/* ── CALENDLY ─────────────────────────────────────────────── */}
-          <IntegCard
-            icon="📅" title="Calendly — automatic booking link" badge="Optional"
-            status={creds.calendlyUrl?.isSet}
-            desc={<>Once a lead's timeline and budget are confirmed, the AI naturally offers your Calendly link so they can book a showing directly — no back-and-forth on times needed.<br /><br /><strong>Without Calendly:</strong> the AI proposes 2–3 time slots in the conversation and notes the agreed time in the lead summary. Nothing breaks — this is purely additive.<br /><br /><strong>Steps:</strong><br />1. Sign up at <a href="https://calendly.com" target="_blank" style={{color:'var(--sage)'}}>calendly.com</a> — free plan is fine<br />2. Create an event type (e.g. "Property Showing — 30 min")<br />3. Copy your scheduling link and paste it below</>}
-            link="https://calendly.com" linkLabel="Open Calendly →"
-          >
-            <CredField
-              label="Your Calendly URL" field="calendlyUrl" placeholder="https://calendly.com/yourname/showing"
-              current={creds.calendlyUrl} saving={credsSaving.calendlyUrl} msg={credsMsg.calendlyUrl}
-              onSave={saveCred}
-            />
-            {creds.calendlyUrl?.isSet && (
-              <div style={{ marginTop: '.75rem', background: 'var(--sage-light)', borderRadius: '8px', padding: '.75rem 1rem', fontSize: '13px', color: 'var(--sage)' }}>
-                ✓ Once leads qualify, the AI will offer your booking link automatically. It also renders as a <strong>📅 Book a showing →</strong> button in the chat UI.
-              </div>
-            )}
-          </IntegCard>
-
           {/* ── TWILIO SMS ───────────────────────────────────────────── */}
           <IntegCard
-            icon="📱" title="SMS — get a Twilio number" badge="Optional"
+            icon="📱" title="SMS — get a Twilio number" badge="Recommended"
             status={creds.twilioPhone?.isSet}
-            desc={<>Leads can text a real phone number and the AI responds instantly by SMS. Each agent needs their own number (~$1/mo on Twilio).<br/><br/><strong>Steps:</strong><br/>1. Sign up at <a href="https://twilio.com" target="_blank" style={{color:'var(--sage)'}}>twilio.com</a> — free trial includes credit<br/>2. Buy a local number (search your area code)<br/>3. Go to that number → Messaging → Incoming messages webhook → set to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>https://www.sayhelloleads.com/api/inbound-sms</code><br/>4. Paste your credentials below</>}
+            desc={<>Leads can text a real phone number and the AI responds instantly by SMS — even when you're unavailable. Each agent needs their own Twilio number (~$1/mo).<br/><br/><strong style={{color:'#c0392b'}}>⚠️ Heads up — 10DLC registration required</strong><br/>The US carriers (AT&T, Verizon etc.) require all business SMS senders to register their number and use case. This is called 10DLC. It takes a few days to be approved and must be completed before your number can send messages at scale. Plan for 3–5 business days.<br/><a href="https://help.twilio.com/articles/1260800720410-What-is-A2P-10DLC-" target="_blank" style={{color:'var(--sage)'}}>Learn about 10DLC →</a><br/><br/><strong>Setup steps:</strong><br/>1. Sign up at <a href="https://twilio.com" target="_blank" style={{color:'var(--sage)'}}>twilio.com</a> — free trial includes credit<br/>2. Complete 10DLC brand + campaign registration in the Twilio console<br/>3. Buy a local number (search your area code)<br/>4. Go to that number → Messaging → Incoming messages webhook → set to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>https://www.sayhelloleads.com/api/inbound-sms</code><br/>5. Paste your credentials below</>}
             link="https://console.twilio.com" linkLabel="Open Twilio console →"
           >
             <CredField
@@ -3070,6 +3171,7 @@ const GLOBAL_CSS = `
   .empty-state svg { margin-bottom:1rem; opacity:.3; }
   .empty-state p { font-size:14px; }
 
+  footer > div > div { background: transparent !important; border: none !important; box-shadow: none !important; }
   .setup-step { border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-bottom:1rem; background:var(--white); }
   .step-header { display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
   .setup-step .step-num { width:28px; height:28px; background:var(--sage-light); color:var(--sage); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
