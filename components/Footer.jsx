@@ -22,6 +22,7 @@ export default function Footer({ onHowItWorks }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '2.5rem',
         marginBottom: '2.5rem',
+        background: 'transparent',
       }}>
 
         {/* ── Column 1: Brand ── */}
@@ -35,7 +36,7 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 2: Product ── */}
-        <div style={{ background: 'transparent' , boxShadow: 'none', border: 'none'}}>
+        <div>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Product
           </div>
@@ -51,7 +52,7 @@ export default function Footer({ onHowItWorks }) {
         </div>
 
         {/* ── Column 3: Legal ── */}
-        <div style={{ background: 'transparent' }}>
+        <div>
           <div style={{ fontSize: '11px', fontWeight: '600', color: '#4a6741', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: '.85rem' }}>
             Legal & Support
           </div>
