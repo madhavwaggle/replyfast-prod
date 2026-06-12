@@ -85,8 +85,9 @@ export default function App() {
   const [manualResult, setManualResult]         = useState(null); // { lead, suggestedOutreach }
   const [pendingOutreachLead, setPendingOutreachLead] = useState(null); // lead card → reopen outreach modal
   const [upgradeInterestLoading, setUpgradeInterestLoading] = useState(false);
-  // Welcome banner — shown to new users arriving from email verification
   const [showWelcome, setShowWelcome] = useState(false);
+  // Derived — true only when all three Twilio fields are saved
+  const twilioConfigured = !!(creds.twilioSid?.isSet && creds.twilioToken?.isSet && creds.twilioPhone?.isSet);
   const chatRef = useRef(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const avatarRef = useRef(null);
@@ -155,7 +156,7 @@ export default function App() {
   useEffect(() => {
     if (view === 'dashboard') loadLeads();
     if (['setup','profile','integrations'].includes(view)) loadProfile();
-    if (view === 'integrations') loadCreds();
+    if (['integrations','dashboard'].includes(view)) loadCreds();
     if (view === 'dashboard') loadChecklist();
     if (view === 'dashboard') loadAiUsage();
   }, [view]);
@@ -1719,7 +1720,7 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
                           </button>
                         )}
                         <button className="action-btn green" onClick={() => continueConvo(lead)}>💬 Continue conversation</button>
-                        {lead.phone && (
+                        {lead.phone && twilioConfigured && (
                           <button className="action-btn" onClick={async () => {
                             const res = await fetch('/api/send-sms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: lead.phone, message: `Hi ${lead.fname}, just following up on ${lead.property}. Are you still interested in scheduling a showing?` }) });
                             alert(res.ok ? `SMS sent to ${lead.phone}!` : 'SMS failed — check Twilio setup.');
@@ -2207,7 +2208,7 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`;
               result={{
                 lead:              pendingOutreachLead,
                 suggestedOutreach: pendingOutreachLead.outreachDraft || '',
-                twilioReady:       !!(pendingOutreachLead.phone),
+                twilioReady:       !!(twilioConfigured && pendingOutreachLead.phone),
                 hasEmail:          !!pendingOutreachLead.email,
               }}
               onSendOutreach={async (leadId, message, channel) => {
