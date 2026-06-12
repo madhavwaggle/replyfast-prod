@@ -2285,7 +2285,7 @@ NEVER: bullet points, formal tone, sign-offs, or mention AI.`}`;
 
           {/* ── TWILIO SMS ───────────────────────────────────────────── */}
           <IntegCard
-            icon="📱" title="SMS — get a Twilio number" badge="Recommended"
+            icon="📱" title="SMS — get a Twilio number" badge="Optional"
             status={creds.twilioPhone?.isSet}
             desc={<>Leads can text a real phone number and the AI responds instantly by SMS — even when you're unavailable. Each agent needs their own Twilio number (~$1/mo).<br/><br/><strong style={{color:'#c0392b'}}>⚠️ Heads up — 10DLC registration required</strong><br/>The US carriers (AT&T, Verizon etc.) require all business SMS senders to register their number and use case. This is called 10DLC. It takes a few days to be approved and must be completed before your number can send messages at scale. Plan for 3–5 business days.<br/><a href="https://help.twilio.com/articles/1260800720410-What-is-A2P-10DLC-" target="_blank" style={{color:'var(--sage)'}}>Learn about 10DLC →</a><br/><br/><strong>Setup steps:</strong><br/>1. Sign up at <a href="https://twilio.com" target="_blank" style={{color:'var(--sage)'}}>twilio.com</a> — free trial includes credit<br/>2. Complete 10DLC brand + campaign registration in the Twilio console<br/>3. Buy a local number (search your area code)<br/>4. Go to that number → Messaging → Incoming messages webhook → set to:<br/><code style={{fontSize:'12px',background:'#f3f4f6',padding:'2px 6px',borderRadius:'4px',display:'inline-block',marginTop:'4px'}}>https://www.sayhelloleads.com/api/inbound-sms</code><br/>5. Paste your credentials below</>}
             link="https://console.twilio.com" linkLabel="Open Twilio console →"
