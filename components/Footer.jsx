@@ -16,11 +16,9 @@ export default function Footer({ onHowItWorks }) {
       fontFamily: "'DM Sans', sans-serif",
     }}>
       <style>{`
-        .footer-col {
+        .footer-col nav {
           background: transparent !important;
           border: none !important;
-          box-shadow: none !important;
-          padding: 0 !important;
         }
       `}</style>
       <div style={{
