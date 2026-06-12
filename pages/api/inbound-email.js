@@ -18,7 +18,7 @@ import { getAgentConfig } from '../../lib/agentConfig';
 import { triggerAIResponse } from './new-lead';
 import { buildScoringPrompt, parseScoreResponse } from '../../lib/aiPrompts';
 import { validateScore } from '../../lib/guardrails';
-import { detectCallIntent, notifyAgentCallRequest } from '../../lib/notify';
+import { detectCallIntent, notifyAgentCallRequest, notifyAgentNewLead } from '../../lib/notify';
 import Anthropic from '@anthropic-ai/sdk';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -144,11 +144,64 @@ export default async function handler(req, res) {
           }
         }
       }
-      // Continue the AI conversation
-      await Promise.race([
-        triggerAIResponse(lead, agent, cfg),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000)),
-      ]);
+      // ── Generate conversation-aware reply (NOT first-response) ────────────
+      // Use buildConversationPrompt so it reads the full history, knows what's
+      // already been asked, and doesn't repeat timeline/budget questions.
+      const { buildConversationPrompt } = await import('../../lib/aiPrompts');
+      const { processReply, fallbackReply } = await import('../../lib/guardrails');
+
+      const agentName  = agent?.name || 'Agent';
+      const conversationHistory = (lead.messages || []).map(m => ({
+        role:    m.role === 'ai' ? 'assistant' : 'user',
+        content: m.text,
+      }));
+
+      const prompt = buildConversationPrompt({
+        agentName,
+        lead,
+        conversationHistory,
+        calendlyUrl: cfg.calendlyUrl || '',
+      });
+
+      const replyResp = await anthropic.messages.create({
+        model:    'claude-sonnet-4-20250514',
+        max_tokens: 250,
+        system:   prompt.system,
+        messages: prompt.messages.length > 0 ? prompt.messages : [{ role: 'user', content: 'Hello' }],
+      });
+
+      const rawReply = replyResp.content?.[0]?.text?.trim() || '';
+      const reply    = processReply(rawReply) || fallbackReply(agentName);
+
+      // Save AI reply to conversation
+      lead.messages.push({ role: 'ai', text: reply });
+      lead.updatedAt = new Date().toISOString();
+      await saveLead(lead);
+
+      // Send reply back to lead via email
+      if (lead.email && cfg.postmarkToken) {
+        try {
+          const { ServerClient } = await import('postmark');
+          const displayName = cfg.displayName || agentName;
+          const fromEmail   = process.env.POSTMARK_FROM_EMAIL || 'leads@sayhelloleads.com';
+          await new ServerClient(cfg.postmarkToken).sendEmail({
+            From:     `${displayName} <${fromEmail}>`,
+            ReplyTo:  `${lead.agentId}@inbound.sayhelloleads.com`,
+            To:       lead.email,
+            Subject:  lead.property ? `Re: ${lead.property}` : `Re: your inquiry`,
+            TextBody: reply,
+            HtmlBody: `<div style="font-family:sans-serif;max-width:600px;line-height:1.6;">${reply.replace(/\n/g, '<br>')}</div>`,
+          });
+        } catch (e) { console.error('[inbound-email] reply send error:', e.message); }
+      }
+
+      // Notify agent
+      const agentEmail = agent?.notifyEmail || agent?.email;
+      if (agent?.agentNotifyPhone) lead.agentNotifyPhone = agent.agentNotifyPhone;
+      if (agentEmail) {
+        notifyAgentNewLead(lead, agentEmail, agentName, cfg.resendKey)
+          .catch(e => console.error('[inbound-email] notify error:', e.message));
+      }
     } catch (e) { console.error('[inbound-email] reply AI error:', e.message); }
     return res.status(200).json({ id: lead.id, message: 'Reply processed' });
   }
